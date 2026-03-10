@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cifra/dispersio · free — concept</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #080a14;
+  --surface: #0c0e1c;
+  --panel:   #0e1020;
+  --border:  #1a2248;
+  --accent:  #4169e1;
+  --text:    #c8d0f0;
+  --dim:     #7080b0;
+  --muted:   #2a3460;
+  --mono:    'JetBrains Mono', monospace;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 20px; height: 44px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+}
+.logo { color: var(--accent); font-weight: 700; font-size: 15px; letter-spacing: 1px; }
+.logo a { color: inherit; text-decoration: none; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.nav-link {
+  font-size: 11px; color: var(--dim); text-decoration: none;
+  padding: 4px 10px; border: 1px solid transparent; border-radius: 3px;
+  transition: all .15s;
+}
+.nav-link:hover { color: var(--text); border-color: var(--border); }
+.nav-link.active { color: var(--accent); border-color: var(--accent); }
+.langbar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; flex-wrap: wrap; position: sticky; top: 44px; z-index: 99;
+}
+.lang-btn {
+  padding: 3px 8px; border-radius: 3px;
+  border: 1px solid var(--border); background: transparent; color: var(--dim);
+  font-family: var(--mono); font-size: 10px; cursor: pointer;
+  transition: all .15s; user-select: none;
+}
+.lang-btn:hover { color: var(--text); border-color: var(--muted); }
+.lang-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(65,105,225,.08); }
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 60px 40px 80px;
+  flex: 1;
+}
+.section { margin-bottom: 64px; }
+.section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--accent); text-transform: uppercase;
+  margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.body-text { font-size: 13px; line-height: 2; color: var(--text); font-weight: 300; }
+.body-text p { margin-bottom: 20px; }
+.body-text p:last-child { margin-bottom: 0; }
+.em { color: #a8b8f8; font-style: italic; }
+.strong { color: #e0e8ff; font-weight: 700; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+.pull {
+  border-left: 2px solid var(--accent);
+  padding: 12px 20px; margin: 28px 0;
+  color: var(--dim); font-size: 12px; line-height: 1.9; font-style: italic;
+}
+.figure {
+  margin: 32px 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+}
+.figure-diagram {
+  font-size: 11px; color: var(--dim); line-height: 2;
+  text-align: center; letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.figure-caption {
+  font-size: 10px; color: var(--muted); text-align: center;
+  border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px;
+}
+.ref {
+  font-size: 10px; color: var(--dim); line-height: 1.9;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px;
+}
+.ref-num { color: var(--muted); flex-shrink: 0; }
+.footer {
+  border-top: 1px solid var(--border); padding: 16px 20px;
+  font-size: 10px; color: var(--muted);
+  display: flex; gap: 20px; background: var(--surface);
+}
+.shelf {
+  margin: 32px 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.shelf-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 3fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.shelf-item:last-child { border-bottom: none; }
+.shelf-cell {
+  padding: 10px 14px;
+  line-height: 1.7;
+}
+.shelf-cell:not(:last-child) { border-right: 1px solid var(--border); }
+.shelf-title { color: var(--text); font-weight: 400; }
+.shelf-lang  { color: var(--accent); font-size: 10px; letter-spacing: 0.05em; }
+.shelf-note  { color: var(--dim); font-weight: 300; font-size: 10px; }
+.shelf-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 3fr;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.shelf-header-cell {
+  padding: 7px 14px;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--dim); text-transform: uppercase;
+}
+.shelf-header-cell:not(:last-child) { border-right: 1px solid var(--border); }
+.arlen-note {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--panel);
+  font-size: 10px;
+  color: var(--dim);
+  line-height: 1.9;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><a href="cifra-free.html">cifra/dispersio</a></div>
+  <div class="topbar-right">
+    <a href="cifra-free.html" class="nav-link">← cifra</a>
+    <a href="free-about.html" class="nav-link">about</a>
+    <a href="free-origin.html" class="nav-link">origin</a>
+    <a href="free-concept.html" class="nav-link active">concept</a>
+  </div>
+</div>
+
+<div class="langbar" id="langbar"></div>
+<div class="content" id="content"></div>
+
+<div class="footer">
+  <span>cifra/dispersio</span>
+  <span id="footerLang"></span>
+</div>
+
+<script>
+const LANGS = [
+  { id:'en-GB', label:'🇬🇧 EN',    name:'English'        },
+  { id:'fr',    label:'🇫🇷 FR',    name:'Français'       },
+  { id:'fr-BE', label:'🇧🇪 FR-BE', name:'Français (BE)'  },
+  { id:'fr-CH', label:'🇨🇭 FR-CH', name:'Français (CH)'  },
+  { id:'fr-CA', label:'🇨🇦 QC',    name:'Français (CA)'  },
+  { id:'de',    label:'🇩🇪 DE',    name:'Deutsch'        },
+  { id:'de-AT', label:'🇦🇹 DE-AT', name:'Deutsch (AT)'   },
+  { id:'de-CH', label:'🇨🇭 DE-CH', name:'Deutsch (CH)'   },
+  { id:'nl',    label:'🇳🇱 NL',    name:'Nederlands'     },
+  { id:'lb',    label:'🇱🇺 LB',    name:'Lëtzebuergesch' },
+  { id:'it',    label:'🇮🇹 IT',    name:'Italiano'       },
+  { id:'it-CH', label:'🇨🇭 IT-CH', name:'Italiano (CH)'  },
+  { id:'pt',    label:'🇵🇹 PT',    name:'Português'      },
+  { id:'es',    label:'🇪🇸 ES',    name:'Español'        },
+  { id:'is',    label:'🇮🇸 IS',    name:'Íslenska'       },
+  { id:'ca',    label:'🏴 CA',     name:'Català'         },
+  { id:'eu',    label:'🏴 EU',     name:'Euskara'        },
+  { id:'gl',    label:'🏴 GL',     name:'Galego'         },
+  { id:'oc',    label:'🏴 OC',     name:'Occitan'        },
+  { id:'br',    label:'🏴 BR',     name:'Brezhoneg'      },
+  { id:'co',    label:'🏴 CO',     name:'Corsu'          },
+  { id:'rm',    label:'🇨🇭 RM',    name:'Rumantsch'      },
+];
+
+function getLang(){ try{ return localStorage.getItem('cifra_lang')||'en-GB'; }catch(e){ return 'en-GB'; } }
+function setLang(id){ try{ localStorage.setItem('cifra_lang',id); }catch(e){} }
+
+// ── DIAGRAM (ASCII, language-independent labels injected) ─────────────
+function makeDiagram(d){
+  return `<div class="figure">
+<div class="figure-diagram"><pre style="font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.9;text-align:left;display:inline-block">
+  ${d.msg}  ──────────────────────────────────┐
+                                              │  ${d.encode}
+                          ┌──────────────────┴──────────────────┐
+                          │                                      │
+                   [ f₁ ] [ f₂ ] [ f₃ ] ··· [ fₙ ]     n ${d.fragments}
+                          │                                      │
+                     ${d.any} k ${d.of} n ──────────────────────────┘
+                          │
+                  ${d.reconstruct}  ──── ${d.msg}  ✓
+</pre></div>
+<div class="figure-caption">${d.caption}</div>
+</div>`;
+}
+
+function makeDispersioFig(d){
+  return `<div class="figure">
+<div class="figure-diagram"><pre style="font-family:var(--mono);font-size:10px;color:var(--dim);line-height:2;text-align:left;display:inline-block">
+  ${d.centralised}                      ${d.distributed}
+
+  ┌───────────┐                  f₁ ──── node A
+  │  ${d.server}    │                  f₂ ──── node B
+  │  (${d.singlept}) │    →  dispersio →  f₃ ──── node C
+  │           │                  f₄ ──── node D
+  └───────────┘                  f₅ ──── node E
+   ↑ ${d.danger}                     ↑ ${d.resilient}
+</pre></div>
+<div class="figure-caption">${d.caption2}</div>
+</div>`;
+}
+
+// ── CONTENT ───────────────────────────────────────────────────────────
+const CONTENT = {
+
+'en-GB': {
+  s1_label: 'What This Is',
+  s1: `<p>This document exists for one reason: to make a difficult idea accessible.</p>
+<p>Cryptographic dispersal algorithms — and the distributed systems they make possible — are not intuitive. They were not designed to be. They emerged from a specific historical concern: what happens when a single point of control becomes a single point of failure, or worse, a single point of power.</p>
+<p>That concern is not abstract. It has consequences. And most of the generation that will live with those consequences has never been given a clear explanation of where these algorithms come from, what they do, or why the mathematics behind them matters.</p>
+<div class="pull">This is not a textbook. It is a guided map — from concept to diagram to code — written for students at secondary, pre-university, and undergraduate level who want to understand, not just use.</div>
+<p>The references at the end are real. The explanations are honest. The diagrams are there because a concept without a shape is harder to hold.</p>`,
+
+  s2_label: 'The Central Idea: Dispersal',
+  s2: `<p>The word <span class="em">dispersio</span> comes from Latin: to scatter, to spread. In Roman usage it carried no negative connotation. Scattering was not loss. It was distribution.</p>
+<p>In cryptography, information dispersal is a precise technique. A message <span class="strong">M</span> is encoded into <span class="strong">n</span> fragments. Any <span class="strong">k</span> of those fragments — where k is smaller than n — are sufficient to reconstruct M exactly. No set of fewer than k fragments reveals anything useful about M.</p>
+${makeDiagram({msg:'M',encode:'encode',fragments:'fragments',any:'any',of:'of',reconstruct:'reconstruct',caption:'Figure 1 — Information Dispersal Algorithm (IDA). M is the original message. n fragments are produced. Any k reconstruct M exactly. Fewer than k reveal nothing. [Rabin, 1989]'})}
+<p>This is not the same as encryption alone. Encryption hides content. Dispersal removes the need for any single holder of the complete information. The two work together — but they answer different questions.</p>
+<p>The question dispersal answers is: <span class="em">what if the place that holds the secret disappears, or is seized, or simply fails?</span> The answer is: if no single place holds the complete secret, none of those events can destroy it.</p>`,
+
+  s3_label: 'Where It Comes From',
+  s3: `<p>The formal foundation is Michael O. Rabin's 1989 paper, published in the Journal of the ACM. Rabin showed that any message could be split into fragments in such a way that the relationship between fragments and original is mathematically exact — not approximate, not lossy.</p>
+<p>Alongside this, Adi Shamir's 1979 paper introduced secret sharing via polynomial interpolation over finite fields. Shamir's scheme and Rabin's IDA are algebraically related: both describe threshold systems where k parties, and only k parties, can reconstruct a secret.</p>
+<p>Neither of these papers was written in a vacuum. They came from a field acutely aware of what centralised control of information means — a field shaped by the Cold War, by the emergence of state-level cryptographic standards, and by the early recognition that the entity controlling the key controls everything that the key protects.</p>
+<div class="pull">The distributed algorithm was not invented because decentralisation is fashionable. It was invented because centralisation is dangerous — and the danger is structural, not incidental.</div>`,
+
+  s4_label: 'The Hawking Connection',
+  s4: `<p>This platform draws a deliberate analogy between Hawking radiation and information dispersal. It is worth being precise about what that analogy is, and what it is not.</p>
+<p>Stephen Hawking's 1974 and 1975 papers described a mechanism by which black holes emit radiation — not because anything escapes the event horizon in the conventional sense, but because quantum effects near the horizon produce pairs of particles, one of which is captured and one of which escapes. Over time, the black hole loses mass and eventually evaporates.</p>
+<p>The unresolved question this raised is the information loss paradox: if a black hole forms from a specific configuration of matter and then evaporates completely, has the information encoded in that original configuration been destroyed? Most physicists now believe the answer is no — that information is preserved, but dispersed across the radiation in a form that is practically irretrievable.</p>
+<div class="pull">Information does not vanish. It disperses. This is the principle that connects Hawking radiation to cryptographic dispersal — not as metaphor alone, but as a structural claim about what information is and how it behaves.</div>
+<p>For a student encountering both ideas for the first time, the connection is useful precisely because it frames dispersal not as a technical trick but as a property of reality. Information has weight. It does not disappear. It moves, it spreads, it encodes itself in what surrounds it.</p>`,
+
+  s5_label: 'Where It Is Used',
+  s5: `<p>Dispersal and threshold cryptography appear in more places than most students realise.</p>
+<p><span class="strong">Distributed storage.</span> Systems like IPFS and Filecoin use content-addressed storage with erasure coding — a close relative of IDA — to ensure that no single server holds a complete file and no single failure destroys data.</p>
+<p><span class="strong">Key management.</span> Hardware security modules in banking and government systems often use Shamir secret sharing to distribute the master key across multiple custodians. No single person can access the key alone.</p>
+<p><span class="strong">Blockchain and distributed ledgers.</span> The consensus mechanisms underlying many distributed ledgers are built on threshold assumptions: k of n validators must agree before a transaction is confirmed. The mathematics is the same.</p>
+<p><span class="strong">Secure multi-party computation.</span> When multiple parties need to compute a function over private inputs without revealing those inputs to each other, dispersal and threshold schemes form part of the underlying protocol.</p>
+${makeDispersioFig({centralised:'centralised',distributed:'distributed',server:'SERVER',singlept:'single point',danger:'single point of failure',resilient:'no single point of failure',caption2:'Figure 2 — Centralised vs. dispersed architecture. In a centralised system, one compromise destroys the whole. In a dispersed system, no fragment alone is sufficient.'})}
+<p>The point is not that decentralisation is always better. It is that the choice between centralised and distributed has consequences that most users of these systems never think about — and that understanding those consequences requires understanding the mathematics underneath them.</p>`,
+
+  s6_label: 'A Note on Language',
+  s6: `<p>This platform is available in twenty-two languages. That number was not chosen for completeness or for coverage. It was chosen by following the origin of words.</p>
+<p>The word <span class="em">cifra</span> — cipher — entered European languages through Arabic (<span class="em">ṣifr</span>), which itself came from Sanskrit (<span class="em">śūnya</span>): the void, the zero. The concept of nothingness that enables positional notation, that makes modern arithmetic possible, that underlies every digital system in existence — it arrived in Europe through the minority languages and trade routes of the medieval Mediterranean.</p>
+<p>The languages here — Breton, Occitan, Basque, Romansh, Luxembourgish, Catalan, and others — are not included because they have large speaker populations. They are included because understanding is clearest in the language closest to you. The fewer people who have access to knowledge in their own language, the more important it becomes to provide it.</p>
+<div class="pull">This is not a political position. It is a personal one. These are languages I have reason to trust. The selection reflects that trust — nothing more, and nothing less.</div>
+<p>A secondary school student in a Breton-speaking household, or an undergraduate in Galicia, or a teenager in Luxembourg who switches between three languages before noon — each of them deserves access to the same ideas. The language they encounter those ideas in affects how deeply they can hold them.</p>
+<p>The reference shelf below is not decoration. These are the actual books this project was built from. Etymology first. Syntax second. Physics alongside.</p>
+<div class="shelf">
+  <div class="shelf-header">
+    <div class="shelf-header-cell">title</div>
+    <div class="shelf-header-cell">language axis</div>
+    <div class="shelf-header-cell">role in this project</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Etymologisch Woordenboek — van Dale</div>
+    <div class="shelf-cell shelf-lang">NL / Dutch</div>
+    <div class="shelf-cell shelf-note">Dutch etymological dictionary. Source for tracing word origins through Germanic branches into minority language relatives.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">KLUGE Etymologisches Wörterbuch, 24. Auflage</div>
+    <div class="shelf-cell shelf-lang">DE / German</div>
+    <div class="shelf-cell shelf-note">Standard German etymological reference. Used to trace cifra → Ziffer → ṣifr across the Germanic pathway.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">W. Meyer-Lübke — Romanisches etymologisches Wörterbuch</div>
+    <div class="shelf-cell shelf-lang">Romance languages</div>
+    <div class="shelf-cell shelf-note">The canonical reference for Romance etymology. Basis for FR, ES, PT, IT, OC, CA, GL, CO, RM language selection.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Le Petit Robert 2022</div>
+    <div class="shelf-cell shelf-lang">FR / French</div>
+    <div class="shelf-cell shelf-note">French dictionary with etymology. Anchor for the FR, FR-BE, FR-CH, FR-CA variants and their regional distinctions.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">The Oxford Handbook of Comparative Syntax — Cinque & Kayne</div>
+    <div class="shelf-cell shelf-lang">Cross-linguistic</div>
+    <div class="shelf-cell shelf-note">Structural reference for understanding how syntactic patterns differ across languages — informing how concepts translate, not just words.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Linguistic Polyphony — The Scandinavian Approach (Nølke)</div>
+    <div class="shelf-cell shelf-lang">IS / Nordic</div>
+    <div class="shelf-cell shelf-note">Framework for understanding how a single utterance carries multiple voices. Applied here to the idea that one algorithm description must speak differently in each language.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Stephen Hawking — A Brief History of Time</div>
+    <div class="shelf-cell shelf-lang">EN / Physics</div>
+    <div class="shelf-cell shelf-note">The entry point. Not as a physics textbook but as a demonstration that distance between a concept and its understanding can be crossed — and that the crossing matters.</div>
+  </div>
+</div>
+<div class="arlen-note">The reading ruler in this photograph is a coloured overlay used for Irlen Syndrome — a visual processing condition that affects how the brain interprets contrast and spacing on a page. It is included here not as disclosure but as context: the question of how a person receives information is not separate from the question of what language it arrives in. Both affect how deeply it can be held.</div>`,
+
+  s8_label: 'The Environment This Was Built In',
+  s8: `<p>The machine in this photograph is a ThinkPad. It is an older CPU generation. It is running Linux.</p>
+<p>That choice was not a preference. It was a constraint that became a conviction.</p>
+<p>In Japan, the consumer hardware market has moved almost entirely toward Windows. SSD-equipped machines, GPU-capable machines, machines designed for modern development — they are available, but they come with Windows, and they come with Windows because that is what the market demands. Linux support has narrowed year by year. HDD culture persisted longer here than elsewhere. The machines that ship with genuine Linux compatibility, with accessible boot configuration, with RAM and storage that can be replaced without fighting the system — those machines are increasingly rare in the domestic market.</p>
+<p>This ThinkPad is second-hand. The SSD was replaced. The RAM was upgraded. These are things this machine allows, which most current Japanese consumer hardware does not.</p>
+<div class="pull">The reason for choosing Linux is not ideology. It is trust. An operating system that does not serve advertisements. A development environment where JavaScript runs cleanly from the command line. A terminal that behaves the way a terminal should behave. These are not luxury features. They are the minimum conditions for doing the work.</div>
+<p>Building cifra/dispersio — the visualisations, the graph engine, the editor, the twenty-two language system — was done on this machine, in this environment, under these constraints. It reached the limit of what the hardware can carry. That is not a complaint. It is a record.</p>
+<p>There is a second thing in this photograph: the reading ruler. It is a coloured overlay for Irlen Syndrome — a visual processing condition in which contrast, spacing, and the relationship between text and background become sources of fatigue and distortion rather than neutral surfaces to read from.</p>
+<p>I have never been formally assessed for Irlen Syndrome. I wanted to be. In Japan, the path to assessment requires a prior diagnosis of developmental disability — a letter from a clinician establishing that category before the visual question can even be asked. Irlen Syndrome is not recognised as independent. It is attached, administratively, to a different set of conditions. To get the assessment, you must first accept a label that may not fit, in a system that does not always distinguish between what fits and what is convenient.</p>
+<p>I have been managing this without a formal diagnosis for more than fifteen years. The reading ruler is not a prescription. It is something I found worked, and kept.</p>
+<div class="pull">The visual stress from working in a poorly adapted environment — incorrect contrast, unsupported display settings, the accumulated friction of a screen that does not account for how light lands — is not separate from the difficulty of building this. It is part of it. This is what the environment looks like from inside it.</div>
+<p>I do not know what the right answer is. I am not sure there is a clean one, in the system as it currently exists. What I can say is that this platform — the languages, the diagrams, the care taken to make the interface readable — came from a person who knows what it costs when information is not shaped for the person receiving it.</p>
+<p>That is not a credential. It is a reason.</p>`,
+
+  s7_label: 'References',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information for security, load balancing, and fault tolerance. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+<div class="ref"><span class="ref-num">[4]</span><span>Hawking, S.W. (1975). Particle creation by black holes. <em>Communications in Mathematical Physics</em>, 43(3), 199–220.</span></div>
+<div class="ref"><span class="ref-num">[5]</span><span>Shannon, C.E. (1948). A mathematical theory of communication. <em>Bell System Technical Journal</em>, 27(3), 379–423.</span></div>
+<div class="ref"><span class="ref-num">[6]</span><span>Desmedt, Y. & Frankel, Y. (1989). Threshold cryptosystems. In <em>Advances in Cryptology — CRYPTO '89</em>, LNCS 435, 307–315. Springer.</span></div>
+<div class="ref"><span class="ref-num">[7]</span><span>Bekenstein, J.D. (1973). Black holes and entropy. <em>Physical Review D</em>, 7(8), 2333–2346.</span></div>
+<div class="ref"><span class="ref-num">[8]</span><span>MIT CSAIL (2023). Information dispersal in distributed cryptographic systems. Technical Report. Massachusetts Institute of Technology.</span></div>
+`,
+},
+
+'fr': {
+  s1_label: 'Ce que c\'est',
+  s1: `<p>Ce document existe pour une seule raison : rendre une idée difficile accessible.</p>
+<p>Les algorithmes de dispersion cryptographique — et les systèmes distribués qu'ils rendent possibles — ne sont pas intuitifs. Ils n'ont pas été conçus pour l'être. Ils ont émergé d'une préoccupation historique précise : que se passe-t-il quand un point de contrôle unique devient un point de défaillance unique, ou pire, un point de pouvoir unique.</p>
+<p>Cette préoccupation n'est pas abstraite. Elle a des conséquences. Et la plupart de la génération qui vivra avec ces conséquences n'a jamais reçu d'explication claire sur l'origine de ces algorithmes, ce qu'ils font, ou pourquoi les mathématiques qui les sous-tendent importent.</p>
+<div class="pull">Ce n'est pas un manuel. C'est une carte guidée — du concept au diagramme au code — écrite pour des élèves du secondaire, du lycée et de l'université qui veulent comprendre, pas seulement utiliser.</div>
+<p>Les références à la fin sont réelles. Les explications sont honnêtes. Les diagrammes sont là parce qu'un concept sans forme est plus difficile à saisir.</p>`,
+
+  s2_label: 'L\'idée centrale : la dispersion',
+  s2: `<p>Le mot <span class="em">dispersio</span> vient du latin : disperser, répandre. Dans l'usage romain, il n'avait aucune connotation négative. Disperser n'était pas perdre. C'était distribuer.</p>
+<p>En cryptographie, la dispersion d'information est une technique précise. Un message <span class="strong">M</span> est encodé en <span class="strong">n</span> fragments. N'importe quels <span class="strong">k</span> de ces fragments — où k est inférieur à n — suffisent à reconstruire M exactement. Aucun ensemble de moins de k fragments ne révèle quoi que ce soit d'utile sur M.</p>
+${makeDiagram({msg:'M',encode:'encoder',fragments:'fragments',any:'n\'importe quels',of:'sur',reconstruct:'reconstruire',caption:'Figure 1 — Algorithme de dispersion d\'information (IDA). M est le message original. n fragments sont produits. N\'importe quels k reconstruisent M exactement. Moins de k ne révèlent rien. [Rabin, 1989]'})}
+<p>Ce n'est pas la même chose que le chiffrement seul. Le chiffrement cache le contenu. La dispersion supprime la nécessité d'un seul détenteur de l'information complète. Les deux fonctionnent ensemble — mais ils répondent à des questions différentes.</p>
+<p>La question à laquelle la dispersion répond est : <span class="em">et si l'endroit qui détient le secret disparaît, est saisi, ou échoue simplement ?</span> La réponse est : si aucun endroit unique ne détient le secret complet, aucun de ces événements ne peut le détruire.</p>`,
+
+  s3_label: 'D\'où ça vient',
+  s3: `<p>La fondation formelle est l'article de Michael O. Rabin de 1989, publié dans le Journal of the ACM. Rabin a montré que tout message pouvait être divisé en fragments de telle sorte que la relation entre les fragments et l'original soit mathématiquement exacte — pas approximative, pas avec perte.</p>
+<p>Parallèlement, l'article d'Adi Shamir de 1979 a introduit le partage de secret par interpolation polynomiale sur des corps finis. Le schéma de Shamir et l'IDA de Rabin sont algébriquement liés : tous deux décrivent des systèmes à seuil où k parties, et seulement k parties, peuvent reconstruire un secret.</p>
+<p>Aucun de ces articles n'a été écrit dans le vide. Ils sont venus d'un domaine très conscient de ce que signifie le contrôle centralisé de l'information — un domaine façonné par la Guerre froide, par l'émergence de standards cryptographiques étatiques, et par la reconnaissance précoce que l'entité contrôlant la clé contrôle tout ce que la clé protège.</p>
+<div class="pull">L'algorithme distribué n'a pas été inventé parce que la décentralisation est à la mode. Il a été inventé parce que la centralisation est dangereuse — et le danger est structurel, pas accidentel.</div>`,
+
+  s4_label: 'Le lien avec Hawking',
+  s4: `<p>Cette plateforme établit une analogie délibérée entre le rayonnement de Hawking et la dispersion d'information. Il convient d'être précis sur ce qu'est cette analogie, et ce qu'elle n'est pas.</p>
+<p>Les articles de Stephen Hawking de 1974 et 1975 ont décrit un mécanisme par lequel les trous noirs émettent un rayonnement — non pas parce que quelque chose s'échappe de l'horizon des événements au sens conventionnel, mais parce que les effets quantiques près de l'horizon produisent des paires de particules, dont l'une est capturée et l'autre s'échappe. Avec le temps, le trou noir perd de la masse et finit par s'évaporer.</p>
+<p>La question non résolue que cela a soulevée est le paradoxe de la perte d'information : si un trou noir se forme à partir d'une configuration spécifique de matière puis s'évapore complètement, l'information encodée dans cette configuration originale a-t-elle été détruite ? La plupart des physiciens croient maintenant que la réponse est non — que l'information est préservée, mais dispersée à travers le rayonnement sous une forme pratiquement irrécupérable.</p>
+<div class="pull">L'information ne disparaît pas. Elle se disperse. C'est le principe qui relie le rayonnement de Hawking à la dispersion cryptographique — non pas comme simple métaphore, mais comme affirmation structurelle sur ce qu'est l'information et comment elle se comporte.</div>`,
+
+  s5_label: 'Où c\'est utilisé',
+  s5: `<p>La dispersion et la cryptographie à seuil apparaissent dans plus d'endroits que la plupart des étudiants ne le réalisent.</p>
+<p><span class="strong">Stockage distribué.</span> Des systèmes comme IPFS utilisent un codage d'effacement — un proche parent de l'IDA — pour s'assurer qu'aucun serveur unique ne détient un fichier complet.</p>
+<p><span class="strong">Gestion des clés.</span> Les modules de sécurité matériels dans les systèmes bancaires utilisent souvent le partage de secret de Shamir pour distribuer la clé maîtresse entre plusieurs gardiens.</p>
+<p><span class="strong">Chaînes de blocs.</span> Les mécanismes de consensus reposent sur des hypothèses de seuil : k validateurs sur n doivent s'accorder avant qu'une transaction soit confirmée.</p>
+${makeDispersioFig({centralised:'centralisé',distributed:'distribué',server:'SERVEUR',singlept:'point unique',danger:'point unique de défaillance',resilient:'aucun point unique de défaillance',caption2:'Figure 2 — Architecture centralisée vs dispersée. Dans un système centralisé, une compromission détruit l\'ensemble. Dans un système dispersé, aucun fragment seul ne suffit.'})}`,
+
+  s6_label: 'Une note sur la langue',
+  s6: `<p>Cette plateforme est disponible en vingt-deux langues. Ce nombre n'a pas été choisi pour l'exhaustivité. Il a été choisi en suivant l'origine des mots.</p>
+<p>Le mot <span class="em">cifra</span> — chiffre — est entré dans les langues européennes par l'arabe (<span class="em">ṣifr</span>), lui-même venu du sanskrit (<span class="em">śūnya</span>) : le vide, le zéro. Le concept du néant qui rend possible la notation positionnelle, qui sous-tend chaque système numérique existant — il est arrivé en Europe par les langues minoritaires et les routes commerciales de la Méditerranée médiévale.</p>
+<p>Les langues ici — le breton, l'occitan, le basque, le romanche, le luxembourgeois, le catalan, et d'autres — ne sont pas incluses parce qu'elles ont de grandes populations de locuteurs. Elles sont incluses parce que la compréhension est toujours la plus claire dans la langue la plus proche de soi.</p>
+<div class="pull">Ce n'est pas une position politique. C'est une position personnelle. Ce sont des langues en lesquelles j'ai des raisons de faire confiance. La sélection reflète cette confiance — rien de plus, et rien de moins.</div>
+<p>L'étagère de référence ci-dessous n'est pas une décoration. Ce sont les livres réels à partir desquels ce projet a été construit. L'étymologie d'abord. La syntaxe ensuite. La physique en parallèle.</p>
+<div class="shelf">
+  <div class="shelf-header">
+    <div class="shelf-header-cell">titre</div>
+    <div class="shelf-header-cell">axe linguistique</div>
+    <div class="shelf-header-cell">rôle dans ce projet</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Etymologisch Woordenboek — van Dale</div>
+    <div class="shelf-cell shelf-lang">NL / Néerlandais</div>
+    <div class="shelf-cell shelf-note">Dictionnaire étymologique néerlandais. Source pour retracer les origines des mots à travers les branches germaniques.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">KLUGE Etymologisches Wörterbuch, 24. Auflage</div>
+    <div class="shelf-cell shelf-lang">DE / Allemand</div>
+    <div class="shelf-cell shelf-note">Référence étymologique allemande standard. Utilisé pour retracer cifra → Ziffer → ṣifr par la voie germanique.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">W. Meyer-Lübke — Romanisches etymologisches Wörterbuch</div>
+    <div class="shelf-cell shelf-lang">Langues romanes</div>
+    <div class="shelf-cell shelf-note">La référence canonique pour l'étymologie romane. Base pour la sélection des langues FR, ES, PT, IT, OC, CA, GL, CO, RM.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Le Petit Robert 2022</div>
+    <div class="shelf-cell shelf-lang">FR / Français</div>
+    <div class="shelf-cell shelf-note">Dictionnaire français avec étymologie. Ancre pour les variantes FR, FR-BE, FR-CH, FR-CA et leurs distinctions régionales.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">The Oxford Handbook of Comparative Syntax — Cinque & Kayne</div>
+    <div class="shelf-cell shelf-lang">Translinguistique</div>
+    <div class="shelf-cell shelf-note">Référence structurelle pour comprendre comment les concepts se traduisent — pas seulement les mots.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Linguistic Polyphony — Nølke</div>
+    <div class="shelf-cell shelf-lang">IS / Nordique</div>
+    <div class="shelf-cell shelf-note">Cadre pour comprendre comment un même énoncé porte plusieurs voix — appliqué ici à l'idée qu'une description d'algorithme doit parler différemment dans chaque langue.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Stephen Hawking — A Brief History of Time</div>
+    <div class="shelf-cell shelf-lang">EN / Physique</div>
+    <div class="shelf-cell shelf-note">Le point d'entrée. Pas comme manuel de physique, mais comme démonstration que la distance entre un concept et sa compréhension peut être franchie.</div>
+  </div>
+</div>
+<div class="arlen-note">La règle de lecture colorée sur cette photographie est un cache coloré utilisé pour le Syndrome d'Irlen — une condition de traitement visuel qui affecte la façon dont le cerveau interprète le contraste sur une page. Elle est incluse ici non comme divulgation, mais comme contexte : la question de comment une personne reçoit l'information n'est pas séparée de la question de la langue dans laquelle elle arrive.</div>`,
+
+  s8_label: 'L\'environnement dans lequel c\'est construit',
+  s8: `<p>La machine sur cette photographie est un ThinkPad. Il est d'une génération de processeur ancienne. Il tourne sous Linux.</p>
+<p>Ce choix n'était pas une préférence. C'était une contrainte devenue conviction.</p>
+<p>Au Japon, le marché du matériel grand public s'est orienté presque entièrement vers Windows. Les machines équipées de SSD, capables d'utiliser des GPU, conçues pour le développement moderne — elles existent, mais elles viennent avec Windows, parce que c'est ce que le marché exige. La culture HDD a persisté plus longtemps ici qu'ailleurs. Les machines qui autorisent une vraie compatibilité Linux, une configuration de démarrage accessible, de la RAM et du stockage remplaçables sans se battre contre le système — ces machines sont de plus en plus rares sur le marché domestique.</p>
+<p>Ce ThinkPad est d'occasion. Le SSD a été remplacé. La RAM a été augmentée. Ce sont des choses que cette machine permet, que la plupart des machines japonaises actuelles n'autorisent pas.</p>
+<div class="pull">La raison de choisir Linux n'est pas idéologique. C'est la confiance. Un système d'exploitation qui ne diffuse pas de publicités. Un environnement de développement où JavaScript fonctionne proprement depuis la ligne de commande. Un terminal qui se comporte comme un terminal devrait se comporter. Ce ne sont pas des fonctionnalités de luxe. Ce sont les conditions minimales pour faire le travail.</div>
+<p>Construire cifra/dispersio — les visualisations, le moteur de graphe, l'éditeur, le système en vingt-deux langues — a été fait sur cette machine, dans cet environnement, sous ces contraintes. Elle a atteint la limite de ce que le matériel peut supporter. Ce n'est pas une plainte. C'est un enregistrement.</p>
+<p>Je n'ai jamais été formellement évalué pour le Syndrome d'Irlen. Je l'aurais voulu. Au Japon, l'accès à l'évaluation exige un diagnostic préalable de handicap développemental — un document clinique établissant cette catégorie avant même que la question visuelle puisse être posée. Le Syndrome d'Irlen n'est pas reconnu de manière indépendante. Il est attaché, administrativement, à d'autres conditions. Pour obtenir l'évaluation, il faut d'abord accepter une étiquette qui peut ne pas correspondre.</p>
+<p>Je gère cela sans diagnostic formel depuis plus de quinze ans. La règle de lecture n'est pas une prescription. C'est quelque chose que j'ai trouvé qui fonctionnait, et que j'ai gardé.</p>
+<div class="pull">Le stress visuel lié au travail dans un environnement mal adapté — contraste incorrect, paramètres d'affichage non pris en charge, la friction accumulée d'un écran qui ne tient pas compte de la façon dont la lumière arrive — n'est pas séparé de la difficulté de construire ceci. Il en fait partie. C'est à quoi ressemble l'environnement de l'intérieur.</div>
+<p>Je ne sais pas quelle est la bonne réponse. Je ne suis pas sûr qu'il en existe une nette, dans le système tel qu'il existe actuellement. Ce que je peux dire, c'est que cette plateforme — les langues, les diagrammes, le soin apporté à rendre l'interface lisible — vient d'une personne qui sait ce que ça coûte quand l'information n'est pas adaptée à la personne qui la reçoit.</p>
+<p>Ce n'est pas une accréditation. C'est une raison.</p>`,
+
+  s7_label: 'Références',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information for security, load balancing, and fault tolerance. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+<div class="ref"><span class="ref-num">[4]</span><span>Hawking, S.W. (1975). Particle creation by black holes. <em>Communications in Mathematical Physics</em>, 43(3), 199–220.</span></div>
+<div class="ref"><span class="ref-num">[5]</span><span>Shannon, C.E. (1948). A mathematical theory of communication. <em>Bell System Technical Journal</em>, 27(3), 379–423.</span></div>
+<div class="ref"><span class="ref-num">[6]</span><span>Desmedt, Y. & Frankel, Y. (1989). Threshold cryptosystems. <em>CRYPTO '89</em>, LNCS 435, 307–315.</span></div>
+<div class="ref"><span class="ref-num">[7]</span><span>Bekenstein, J.D. (1973). Black holes and entropy. <em>Physical Review D</em>, 7(8), 2333–2346.</span></div>
+`,
+},
+
+'de': {
+  s1_label: 'Was das ist',
+  s1: `<p>Dieses Dokument existiert aus einem einzigen Grund: eine schwierige Idee zugänglich zu machen.</p>
+<p>Kryptographische Dispersionsalgorithmen — und die verteilten Systeme, die sie ermöglichen — sind nicht intuitiv. Sie wurden nicht so entworfen. Sie entstanden aus einer konkreten historischen Sorge: Was passiert, wenn ein einziger Kontrollpunkt zu einem einzigen Ausfallpunkt wird — oder schlimmer noch, zu einem einzigen Machtpunkt.</p>
+<p>Diese Sorge ist nicht abstrakt. Sie hat Konsequenzen. Und die meisten der Generation, die mit diesen Konsequenzen leben wird, hat nie eine klare Erklärung bekommen, woher diese Algorithmen kommen, was sie tun oder warum die Mathematik dahinter wichtig ist.</p>
+<div class="pull">Das hier ist kein Lehrbuch. Es ist eine geführte Karte — vom Konzept über das Diagramm bis zum Code — geschrieben für Schülerinnen und Schüler der Sekundarstufe, Abiturientinnen und Abiturienten sowie Studierende, die verstehen wollen, nicht nur anwenden.</div>`,
+
+  s2_label: 'Die zentrale Idee: Dispersion',
+  s2: `<p>Das Wort <span class="em">dispersio</span> kommt aus dem Lateinischen: streuen, verbreiten. Im römischen Sprachgebrauch hatte es keine negative Konnotation. Streuen war kein Verlust. Es war Verteilung.</p>
+<p>In der Kryptographie ist Informationsdispersion eine präzise Technik. Eine Nachricht <span class="strong">M</span> wird in <span class="strong">n</span> Fragmente kodiert. Beliebige <span class="strong">k</span> dieser Fragmente — wobei k kleiner als n ist — reichen aus, um M exakt zu rekonstruieren. Kein Satz von weniger als k Fragmenten gibt etwas Nützliches über M preis.</p>
+${makeDiagram({msg:'M',encode:'kodieren',fragments:'Fragmente',any:'beliebige',of:'von',reconstruct:'rekonstruieren',caption:'Abbildung 1 — Informationsdispersionsalgorithmus (IDA). M ist die ursprüngliche Nachricht. n Fragmente werden erzeugt. Beliebige k rekonstruieren M exakt. Weniger als k enthüllen nichts. [Rabin, 1989]'})}
+<p>Die Frage, die Dispersion beantwortet, ist: <span class="em">Was, wenn der Ort, der das Geheimnis hält, verschwindet, beschlagnahmt wird oder einfach ausfällt?</span> Die Antwort lautet: Wenn kein einzelner Ort das vollständige Geheimnis hält, kann keines dieser Ereignisse es zerstören.</p>`,
+
+  s3_label: 'Woher es kommt',
+  s3: `<p>Das formale Fundament ist Michael O. Rabins Artikel von 1989, veröffentlicht im Journal of the ACM. Rabin zeigte, dass jede Nachricht so in Fragmente aufgeteilt werden kann, dass die Beziehung zwischen Fragmenten und Original mathematisch exakt ist.</p>
+<p>Daneben führte Adi Shamirs Artikel von 1979 die Geheimnisteilung durch polynomiale Interpolation über endlichen Körpern ein. Beide beschreiben Schwellwertsysteme, bei denen k Parteien — und nur k Parteien — ein Geheimnis rekonstruieren können.</p>
+<div class="pull">Der verteilte Algorithmus wurde nicht erfunden, weil Dezentralisierung modern ist. Er wurde erfunden, weil Zentralisierung gefährlich ist — und die Gefahr ist strukturell, nicht zufällig.</div>`,
+
+  s4_label: 'Die Hawking-Verbindung',
+  s4: `<p>Stephen Hawkings Artikel von 1974 und 1975 beschrieben einen Mechanismus, durch den schwarze Löcher Strahlung emittieren. Quanteneffekte nahe dem Horizont erzeugen Teilchenpaare: eines wird erfasst, eines entkommt. Das schwarze Loch verliert Masse und verdampft schließlich.</p>
+<p>Das dadurch aufgeworfene ungelöste Problem ist das Informationsverlustparadoxon. Die meisten Physiker glauben heute, dass Information erhalten bleibt — aber über die Strahlung verteilt wird, in einer praktisch nicht wiederherstellbaren Form.</p>
+<div class="pull">Information verschwindet nicht. Sie dispersiert. Das ist das Prinzip, das Hawking-Strahlung mit kryptographischer Dispersion verbindet — nicht nur als Metapher, sondern als strukturelle Aussage darüber, was Information ist und wie sie sich verhält.</div>`,
+
+  s5_label: 'Wo es verwendet wird',
+  s5: `<p>Dispersion und Schwellwertkryptographie erscheinen an mehr Orten, als die meisten Studierenden ahnen.</p>
+<p><span class="strong">Verteilte Speicherung.</span> Systeme wie IPFS verwenden Erasure Coding — einen nahen Verwandten von IDA — um sicherzustellen, dass kein einzelner Server eine vollständige Datei hält.</p>
+<p><span class="strong">Schlüsselverwaltung.</span> Hardware-Sicherheitsmodule in Banken verwenden oft Shamirs Geheimnisteilung, um den Hauptschlüssel auf mehrere Verwalter zu verteilen.</p>
+<p><span class="strong">Blockchain.</span> Konsensmechanismen beruhen auf Schwellwertannahmen: k von n Validatoren müssen zustimmen, bevor eine Transaktion bestätigt wird.</p>
+${makeDispersioFig({centralised:'zentralisiert',distributed:'verteilt',server:'SERVER',singlept:'einzelner Punkt',danger:'einzelner Ausfallpunkt',resilient:'kein einzelner Ausfallpunkt',caption2:'Abbildung 2 — Zentralisierte vs. verteilte Architektur.'})}`,
+
+  s6_label: 'Eine Anmerkung zur Sprache',
+  s6: `<p>Diese Plattform ist in zweiundzwanzig Sprachen verfügbar. Diese Zahl wurde nicht für Vollständigkeit gewählt. Sie wurde gewählt, indem dem Ursprung der Wörter gefolgt wurde.</p>
+<p>Das Wort <span class="em">cifra</span> — Ziffer, Chiffre — gelangte über das Arabische (<span class="em">ṣifr</span>) in die europäischen Sprachen, das selbst aus dem Sanskrit (<span class="em">śūnya</span>) stammt: die Leere, die Null. Der Begriff des Nichts, der Stellenwertschreibweise ermöglicht — er kam durch die Minderheitensprachen und Handelsrouten des mittelalterlichen Mittelmeers nach Europa.</p>
+<p>Die Sprachen hier sind nicht einbezogen, weil sie große Sprecherpopulationen haben. Sie sind einbezogen, weil Verstehen immer am klarsten in der Sprache ist, die einem am nächsten steht.</p>
+<div class="pull">Das ist keine politische Position. Es ist eine persönliche. Das sind Sprachen, denen ich aus persönlichen Gründen vertraue. Die Auswahl spiegelt dieses Vertrauen wider — nichts mehr und nichts weniger.</div>
+<p>Das Bücherregal unten ist kein Schmuck. Das sind die tatsächlichen Bücher, aus denen dieses Projekt entstanden ist. Etymologie zuerst. Syntax danach. Physik daneben.</p>
+<div class="shelf">
+  <div class="shelf-header">
+    <div class="shelf-header-cell">Titel</div>
+    <div class="shelf-header-cell">Sprachachse</div>
+    <div class="shelf-header-cell">Rolle in diesem Projekt</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Etymologisch Woordenboek — van Dale</div>
+    <div class="shelf-cell shelf-lang">NL / Niederländisch</div>
+    <div class="shelf-cell shelf-note">Niederländisches etymologisches Wörterbuch. Grundlage für die Rückverfolgung von Wortherkunft durch germanische Äste.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">KLUGE Etymologisches Wörterbuch, 24. Auflage</div>
+    <div class="shelf-cell shelf-lang">DE / Deutsch</div>
+    <div class="shelf-cell shelf-note">Standardreferenz für deutsche Etymologie. Zur Rückverfolgung von cifra → Ziffer → ṣifr auf dem germanischen Weg verwendet.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">W. Meyer-Lübke — Romanisches etymologisches Wörterbuch</div>
+    <div class="shelf-cell shelf-lang">Romanische Sprachen</div>
+    <div class="shelf-cell shelf-note">Die kanonische Referenz für romanische Etymologie. Grundlage für die Sprachauswahl FR, ES, PT, IT, OC, CA, GL, CO, RM.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Le Petit Robert 2022</div>
+    <div class="shelf-cell shelf-lang">FR / Französisch</div>
+    <div class="shelf-cell shelf-note">Französisches Wörterbuch mit Etymologie. Anker für die Varianten FR, FR-BE, FR-CH, FR-CA.</div>
+  </div>
+  <div class="shelf-item">
+    <div class="shelf-cell shelf-title">Stephen Hawking — A Brief History of Time</div>
+    <div class="shelf-cell shelf-lang">EN / Physik</div>
+    <div class="shelf-cell shelf-note">Der Einstiegspunkt. Nicht als Physiklehrbuch, sondern als Demonstration, dass die Distanz zwischen einem Konzept und seinem Verständnis überbrückt werden kann.</div>
+  </div>
+</div>
+<div class="arlen-note">Das Leselineal auf diesem Foto ist eine farbige Überlagerung für das Irlen-Syndrom — eine visuelle Verarbeitungsstörung, die beeinflusst, wie das Gehirn Kontrast auf einer Seite interpretiert. Es ist hier nicht als Offenlegung enthalten, sondern als Kontext: die Frage, wie eine Person Information empfängt, ist nicht getrennt von der Frage, in welcher Sprache sie ankommt.</div>`,
+
+  s8_label: 'Die Umgebung, in der das entstanden ist',
+  s8: `<p>Die Maschine auf diesem Foto ist ein ThinkPad. Sie ist einer älteren Prozessorgeneration. Sie läuft unter Linux.</p>
+<p>Diese Wahl war keine Präferenz. Sie war eine Einschränkung, die zur Überzeugung wurde.</p>
+<p>In Japan hat sich der Consumer-Hardware-Markt fast vollständig in Richtung Windows bewegt. SSD-ausgestattete Maschinen, GPU-fähige Maschinen, Maschinen für moderne Entwicklung — sie existieren, aber sie kommen mit Windows, weil der Markt das verlangt. Die HDD-Kultur hielt hier länger an als anderswo. Die Maschinen, die echte Linux-Kompatibilität mitbringen, zugängliche Boot-Konfiguration, RAM und Speicher, die ohne Systemkampf austauschbar sind — diese Maschinen werden auf dem heimischen Markt immer seltener.</p>
+<p>Dieser ThinkPad ist gebraucht. Die SSD wurde ausgetauscht. Der RAM wurde aufgerüstet. Das sind Dinge, die diese Maschine erlaubt — und die die meisten aktuellen japanischen Consumer-Geräte nicht erlauben.</p>
+<div class="pull">Der Grund für die Wahl von Linux ist nicht Ideologie. Es ist Vertrauen. Ein Betriebssystem, das keine Werbung schaltet. Eine Entwicklungsumgebung, in der JavaScript sauber von der Kommandozeile läuft. Ein Terminal, das sich so verhält, wie sich ein Terminal verhalten sollte. Das sind keine Luxusfunktionen. Das sind die Mindestbedingungen für die Arbeit.</div>
+<p>Ich wurde nie formal auf das Irlen-Syndrom untersucht. Ich hätte es gewollt. In Japan erfordert der Weg zur Untersuchung eine vorherige Diagnose einer Entwicklungsstörung — ein klinisches Dokument, das diese Kategorie festlegt, bevor die visuelle Frage überhaupt gestellt werden kann. Das Irlen-Syndrom wird nicht als eigenständig anerkannt. Es ist administrativ an andere Zustände geknüpft. Um die Untersuchung zu erhalten, muss man zunächst eine Bezeichnung akzeptieren, die möglicherweise nicht passt.</p>
+<p>Ich bewältige das seit mehr als fünfzehn Jahren ohne formale Diagnose. Das Leselineal ist kein Rezept. Es ist etwas, das ich gefunden habe, das funktioniert — und das ich behalten habe.</p>
+<div class="pull">Der visuelle Stress bei der Arbeit in einer schlecht angepassten Umgebung — falscher Kontrast, nicht unterstützte Anzeigeeinstellungen, die angesammelte Reibung eines Bildschirms, der nicht berücksichtigt, wie Licht ankommt — ist nicht getrennt von der Schwierigkeit, das hier zu bauen. Er ist Teil davon. So sieht die Umgebung von innen aus.</div>
+<p>Ich weiß nicht, was die richtige Antwort ist. Ich bin nicht sicher, ob es im System, wie es derzeit existiert, eine saubere gibt. Was ich sagen kann: Diese Plattform — die Sprachen, die Diagramme, die Sorgfalt bei der Gestaltung einer lesbaren Oberfläche — stammt von jemandem, der weiß, was es kostet, wenn Information nicht für die Person geformt ist, die sie empfängt.</p>
+<p>Das ist kein Ausweis. Es ist ein Grund.</p>`,
+
+  s7_label: 'Literatur',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information for security, load balancing, and fault tolerance. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+<div class="ref"><span class="ref-num">[4]</span><span>Hawking, S.W. (1975). Particle creation by black holes. <em>Communications in Mathematical Physics</em>, 43(3), 199–220.</span></div>
+<div class="ref"><span class="ref-num">[5]</span><span>Shannon, C.E. (1948). A mathematical theory of communication. <em>Bell System Technical Journal</em>, 27(3), 379–423.</span></div>
+<div class="ref"><span class="ref-num">[6]</span><span>Desmedt, Y. & Frankel, Y. (1989). Threshold cryptosystems. <em>CRYPTO '89</em>, LNCS 435, 307–315.</span></div>
+`,
+},
+
+'es': {
+  s1_label: 'Qué es esto',
+  s1: `<p>Este documento existe por una sola razón: hacer accesible una idea difícil.</p>
+<p>Los algoritmos de dispersión criptográfica — y los sistemas distribuidos que hacen posibles — no son intuitivos. No fueron diseñados para serlo. Surgieron de una preocupación histórica concreta: qué ocurre cuando un punto único de control se convierte en un punto único de fallo, o peor aún, en un punto único de poder.</p>
+<div class="pull">Esto no es un libro de texto. Es un mapa guiado — del concepto al diagrama al código — escrito para estudiantes de secundaria, bachillerato y universidad que quieren entender, no solo usar.</div>`,
+
+  s2_label: 'La idea central: la dispersión',
+  s2: `<p>La palabra <span class="em">dispersio</span> viene del latín: dispersar, esparcir. En el uso romano no tenía connotación negativa. Dispersar no era perder. Era distribuir.</p>
+<p>En criptografía, la dispersión de información es una técnica precisa. Un mensaje <span class="strong">M</span> se codifica en <span class="strong">n</span> fragmentos. Cualesquiera <span class="strong">k</span> de esos fragmentos — donde k es menor que n — son suficientes para reconstruir M exactamente. Ningún conjunto de menos de k fragmentos revela nada útil sobre M.</p>
+${makeDiagram({msg:'M',encode:'codificar',fragments:'fragmentos',any:'cualesquiera',of:'de',reconstruct:'reconstruir',caption:'Figura 1 — Algoritmo de Dispersión de Información (IDA). M es el mensaje original. Se producen n fragmentos. Cualesquiera k reconstruyen M exactamente. Menos de k no revelan nada. [Rabin, 1989]'})}
+<div class="pull">El algoritmo distribuido no se inventó porque la descentralización esté de moda. Se inventó porque la centralización es peligrosa — y el peligro es estructural, no accidental.</div>`,
+
+  s3_label: 'De dónde viene',
+  s3: `<p>El fundamento formal es el artículo de Michael O. Rabin de 1989, publicado en el Journal of the ACM. Rabin demostró que cualquier mensaje puede dividirse en fragmentos de tal manera que la relación entre fragmentos y original sea matemáticamente exacta.</p>
+<p>El artículo de Adi Shamir de 1979 introdujo el reparto de secretos mediante interpolación polinomial sobre cuerpos finitos. Ambos describen sistemas de umbral donde k partes — y solo k partes — pueden reconstruir un secreto.</p>`,
+
+  s4_label: 'La conexión con Hawking',
+  s4: `<p>Esta plataforma establece una analogía deliberada entre la radiación de Hawking y la dispersión de información.</p>
+<p>Los artículos de Stephen Hawking de 1974 y 1975 describieron un mecanismo por el cual los agujeros negros emiten radiación. Los efectos cuánticos cerca del horizonte producen pares de partículas: una cae dentro, la otra escapa. Con el tiempo, el agujero negro pierde masa y se evapora.</p>
+<div class="pull">La información no desaparece. Se dispersa. Este es el principio que conecta la radiación de Hawking con la dispersión criptográfica — no solo como metáfora, sino como afirmación estructural sobre qué es la información y cómo se comporta.</div>`,
+
+  s5_label: 'Dónde se usa',
+  s5: `<p><span class="strong">Almacenamiento distribuido.</span> Sistemas como IPFS usan codificación de borrado — un pariente cercano del IDA — para garantizar que ningún servidor único tenga un archivo completo.</p>
+<p><span class="strong">Gestión de claves.</span> Los módulos de seguridad hardware en banca usan a menudo el reparto de secretos de Shamir para distribuir la clave maestra entre múltiples custodios.</p>
+<p><span class="strong">Blockchain.</span> Los mecanismos de consenso se basan en supuestos de umbral: k de n validadores deben coincidir antes de confirmar una transacción.</p>
+${makeDispersioFig({centralised:'centralizado',distributed:'distribuido',server:'SERVIDOR',singlept:'punto único',danger:'punto único de fallo',resilient:'ningún punto único de fallo',caption2:'Figura 2 — Arquitectura centralizada frente a dispersa.'})}`,
+
+  s6_label: 'Una nota sobre el idioma',
+  s6: `<p>Esta plataforma está disponible en veintidós idiomas. Ese número no fue elegido por cobertura. Fue elegido siguiendo el origen de las palabras.</p>
+<p>La palabra <span class="em">cifra</span> entró en las lenguas europeas a través del árabe (<span class="em">ṣifr</span>), que vino del sánscrito (<span class="em">śūnya</span>): el vacío, el cero. El concepto de la nada que hace posible la numeración posicional llegó a Europa a través de las lenguas minoritarias y rutas comerciales del Mediterráneo medieval.</p>
+<div class="pull">Esta no es una posición política. Es una posición personal. Son idiomas en los que tengo razones para confiar. La selección refleja esa confianza — nada más, y nada menos.</div>`,
+
+  s7_label: 'Referencias',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+<div class="ref"><span class="ref-num">[4]</span><span>Shannon, C.E. (1948). A mathematical theory of communication. <em>Bell System Technical Journal</em>, 27(3), 379–423.</span></div>
+`,
+},
+
+'it': {
+  s1_label: 'Di cosa si tratta',
+  s1: `<p>Questo documento esiste per una sola ragione: rendere accessibile un'idea difficile.</p>
+<p>Gli algoritmi di dispersione crittografica non sono intuitivi. Non sono stati progettati per esserlo. Sono emersi da una preoccupazione storica precisa: cosa succede quando un singolo punto di controllo diventa un singolo punto di fallimento, o peggio, un singolo punto di potere.</p>
+<div class="pull">Questo non è un libro di testo. È una mappa guidata — dal concetto al diagramma al codice — scritta per studenti delle scuole medie superiori e universitari che vogliono capire, non solo usare.</div>`,
+
+  s2_label: 'L\'idea centrale: la dispersione',
+  s2: `<p>La parola <span class="em">dispersio</span> viene dal latino: spargere, diffondere. Nell'uso romano non aveva connotazione negativa. Spargere non era perdere. Era distribuire.</p>
+<p>In crittografia, la dispersione dell'informazione è una tecnica precisa. Un messaggio <span class="strong">M</span> viene codificato in <span class="strong">n</span> frammenti. Qualsiasi <span class="strong">k</span> di quei frammenti — dove k è minore di n — è sufficiente per ricostruire M esattamente.</p>
+${makeDiagram({msg:'M',encode:'codificare',fragments:'frammenti',any:'qualsiasi',of:'su',reconstruct:'ricostruire',caption:'Figura 1 — Algoritmo di Dispersione dell\'Informazione (IDA). [Rabin, 1989]'})}
+<div class="pull">L'algoritmo distribuito non è stato inventato perché la decentralizzazione è di moda. È stato inventato perché la centralizzazione è pericolosa — e il pericolo è strutturale, non accidentale.</div>`,
+
+  s3_label: 'Da dove viene',
+  s3: `<p>Il fondamento formale è l'articolo di Michael O. Rabin del 1989, pubblicato nel Journal of the ACM. Rabin dimostrò che qualsiasi messaggio può essere diviso in frammenti in modo tale che la relazione tra frammenti e originale sia matematicamente esatta.</p>
+<p>L'articolo di Adi Shamir del 1979 introdusse la condivisione del segreto tramite interpolazione polinomiale su campi finiti. Entrambi descrivono sistemi a soglia dove k parti — e solo k parti — possono ricostruire un segreto.</p>`,
+
+  s4_label: 'Il collegamento con Hawking',
+  s4: `<p>Gli articoli di Stephen Hawking del 1974 e 1975 descrissero un meccanismo attraverso cui i buchi neri emettono radiazione. Gli effetti quantistici vicino all'orizzonte producono coppie di particelle: una viene catturata, l'altra scappa. Nel tempo, il buco nero perde massa ed evapora.</p>
+<div class="pull">L'informazione non scompare. Si disperde. Questo è il principio che collega la radiazione di Hawking alla dispersione crittografica — non solo come metafora, ma come affermazione strutturale su cosa sia l'informazione e come si comporti.</div>`,
+
+  s5_label: 'Dove viene usata',
+  s5: `<p><span class="strong">Archiviazione distribuita.</span> Sistemi come IPFS utilizzano la codifica di cancellazione per garantire che nessun server singolo detenga un file completo.</p>
+<p><span class="strong">Gestione delle chiavi.</span> I moduli di sicurezza hardware nelle banche usano spesso la condivisione del segreto di Shamir per distribuire la chiave principale tra più custodi.</p>
+${makeDispersioFig({centralised:'centralizzato',distributed:'distribuito',server:'SERVER',singlept:'punto singolo',danger:'punto singolo di fallimento',resilient:'nessun punto singolo di fallimento',caption2:'Figura 2 — Architettura centralizzata vs. dispersa.'})}`,
+
+  s6_label: 'Una nota sulla lingua',
+  s6: `<p>Questa piattaforma è disponibile in ventidue lingue. Quel numero non è stato scelto per copertura. È stato scelto seguendo l'origine delle parole.</p>
+<p>La parola <span class="em">cifra</span> è entrata nelle lingue europee attraverso l'arabo (<span class="em">ṣifr</span>), che veniva dal sanscrito (<span class="em">śūnya</span>): il vuoto, lo zero.</p>
+<div class="pull">Questa non è una posizione politica. È una posizione personale. Sono lingue di cui ho ragioni personali per fidarmi. La selezione riflette quella fiducia — niente di più, e niente di meno.</div>`,
+
+  s7_label: 'Riferimenti',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+`,
+},
+
+'pt': {
+  s1_label: 'O que é isto',
+  s1: `<p>Este documento existe por uma única razão: tornar uma ideia difícil acessível.</p>
+<p>Os algoritmos de dispersão criptográfica não são intuitivos. Não foram concebidos para o ser. Emergiram de uma preocupação histórica precisa: o que acontece quando um único ponto de controlo se torna um único ponto de falha, ou pior, um único ponto de poder.</p>
+<div class="pull">Isto não é um manual. É um mapa guiado — do conceito ao diagrama ao código — escrito para estudantes do ensino secundário e universitário que querem compreender, não apenas usar.</div>`,
+
+  s2_label: 'A ideia central: a dispersão',
+  s2: `<p>A palavra <span class="em">dispersio</span> vem do latim: dispersar, espalhar. No uso romano não tinha conotação negativa. Dispersar não era perder. Era distribuir.</p>
+<p>Em criptografia, a dispersão de informação é uma técnica precisa. Uma mensagem <span class="strong">M</span> é codificada em <span class="strong">n</span> fragmentos. Quaisquer <span class="strong">k</span> desses fragmentos — onde k é menor que n — são suficientes para reconstruir M exactamente.</p>
+${makeDiagram({msg:'M',encode:'codificar',fragments:'fragmentos',any:'quaisquer',of:'de',reconstruct:'reconstruir',caption:'Figura 1 — Algoritmo de Dispersão de Informação (IDA). [Rabin, 1989]'})}
+<div class="pull">O algoritmo distribuído não foi inventado porque a descentralização está na moda. Foi inventado porque a centralização é perigosa — e o perigo é estrutural, não acidental.</div>`,
+
+  s3_label: 'De onde vem',
+  s3: `<p>O fundamento formal é o artigo de Michael O. Rabin de 1989, publicado no Journal of the ACM. Rabin demonstrou que qualquer mensagem pode ser dividida em fragmentos de tal forma que a relação entre fragmentos e original seja matematicamente exacta.</p>
+<p>O artigo de Adi Shamir de 1979 introduziu a partilha de segredo por interpolação polinomial sobre corpos finitos. Ambos descrevem sistemas de limiar onde k partes — e apenas k partes — podem reconstruir um segredo.</p>`,
+
+  s4_label: 'A ligação com Hawking',
+  s4: `<p>Os artigos de Stephen Hawking de 1974 e 1975 descreveram um mecanismo pelo qual os buracos negros emitem radiação. Os efeitos quânticos perto do horizonte produzem pares de partículas: uma é capturada, outra escapa. Com o tempo, o buraco negro perde massa e evapora.</p>
+<div class="pull">A informação não desaparece. Dispersa-se. Este é o princípio que liga a radiação de Hawking à dispersão criptográfica — não apenas como metáfora, mas como afirmação estrutural sobre o que é a informação e como se comporta.</div>`,
+
+  s5_label: 'Onde é utilizada',
+  s5: `<p><span class="strong">Armazenamento distribuído.</span> Sistemas como o IPFS utilizam codificação de apagamento para garantir que nenhum servidor único detém um ficheiro completo.</p>
+<p><span class="strong">Gestão de chaves.</span> Os módulos de segurança de hardware na banca utilizam frequentemente a partilha de segredo de Shamir para distribuir a chave mestra entre múltiplos custodiantes.</p>
+${makeDispersioFig({centralised:'centralizado',distributed:'distribuído',server:'SERVIDOR',singlept:'ponto único',danger:'ponto único de falha',resilient:'nenhum ponto único de falha',caption2:'Figura 2 — Arquitectura centralizada vs. dispersa.'})}`,
+
+  s6_label: 'Uma nota sobre a língua',
+  s6: `<p>Esta plataforma está disponível em vinte e duas línguas. Esse número não foi escolhido por cobertura. Foi escolhido seguindo a origem das palavras.</p>
+<p>A palavra <span class="em">cifra</span> entrou nas línguas europeias através do árabe (<span class="em">ṣifr</span>), que veio do sânscrito (<span class="em">śūnya</span>): o vazio, o zero.</p>
+<div class="pull">Esta não é uma posição política. É uma posição pessoal. São línguas em que tenho razões pessoais para confiar. A selecção reflecte essa confiança — nada mais, e nada menos.</div>`,
+
+  s7_label: 'Referências',
+  s7: `
+<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+`,
+},
+
+};
+
+// ── NL ────────────────────────────────────────────────────────────────
+CONTENT['nl'] = {
+  s1_label: 'Wat dit is',
+  s1: `<p>Dit document bestaat om één reden: een moeilijk idee toegankelijk maken.</p>
+<p>Cryptografische verspreidingsalgoritmen — en de gedistribueerde systemen die ze mogelijk maken — zijn niet intuïtief. Ze zijn niet zo ontworpen. Ze kwamen voort uit een concrete historische zorg: wat gebeurt er als één enkel controlepunt een enkel storingspunt wordt, of erger nog, een enkel machtspunt.</p>
+<p>Die zorg is niet abstract. Ze heeft gevolgen. En de meeste mensen van de generatie die met die gevolgen zullen leven, hebben nooit een heldere uitleg gekregen over waar deze algoritmen vandaan komen, wat ze doen, of waarom de wiskunde erachter ertoe doet.</p>
+<div class="pull">Dit is geen leerboek. Het is een gids — van concept naar diagram naar code — geschreven voor middelbare scholieren, vwo-leerlingen en studenten die willen begrijpen, niet alleen gebruiken.</div>
+<p>De verwijzingen aan het einde zijn echt. De uitleg is eerlijk. De diagrammen zijn er omdat een concept zonder vorm moeilijker vast te houden is.</p>`,
+  s2_label: 'Het centrale idee: verspreiding',
+  s2: `<p>Het woord <span class="em">dispersio</span> komt uit het Latijn: strooien, verspreiden. In het Romeinse gebruik had het geen negatieve connotatie. Strooien was geen verlies. Het was verdeling.</p>
+<p>In cryptografie is informatieverspreiding een precieze techniek. Een bericht <span class="strong">M</span> wordt gecodeerd in <span class="strong">n</span> fragmenten. Willekeurige <span class="strong">k</span> van die fragmenten — waarbij k kleiner is dan n — zijn voldoende om M exact te reconstrueren. Geen enkele verzameling van minder dan k fragmenten onthult iets nuttigs over M.</p>
+${makeDiagram({msg:'M',encode:'coderen',fragments:'fragmenten',any:'willekeurige',of:'van',reconstruct:'reconstrueren',caption:'Figuur 1 — Informatieversprei­dingsalgoritme (IDA). M is het originele bericht. n fragmenten worden geproduceerd. Willekeurige k reconstrueren M exact. Minder dan k onthullen niets. [Rabin, 1989]'})}
+<p>Dit is niet hetzelfde als alleen versleuteling. Versleuteling verbergt inhoud. Verspreiding elimineert de noodzaak van één enkele houder van de volledige informatie.</p>
+<p>De vraag die verspreiding beantwoordt: <span class="em">wat als de plek die het geheim bewaart verdwijnt, in beslag wordt genomen, of simpelweg faalt?</span> Het antwoord: als geen enkele plek het volledige geheim bewaart, kan geen van die gebeurtenissen het vernietigen.</p>`,
+  s3_label: 'Waar het vandaan komt',
+  s3: `<p>Het formele fundament is het artikel van Michael O. Rabin uit 1989, gepubliceerd in het Journal of the ACM. Rabin toonde aan dat elk bericht zo in fragmenten kan worden gesplitst dat de relatie tussen fragmenten en origineel wiskundig exact is — niet benaderd, niet verliesgevend.</p>
+<p>Daarnaast introduceerde Adi Shamirs artikel uit 1979 het delen van geheimen via polynomiale interpolatie over eindige velden. Beide beschrijven drempelsystemen waarbij k partijen — en alleen k partijen — een geheim kunnen reconstrueren.</p>
+<div class="pull">Het gedistribueerde algoritme werd niet uitgevonden omdat decentralisatie in de mode is. Het werd uitgevonden omdat centralisatie gevaarlijk is — en het gevaar is structureel, niet toevallig.</div>`,
+  s4_label: 'De Hawking-verbinding',
+  s4: `<p>Dit platform trekt een bewuste analogie tussen Hawkingstraling en informatieverspreiding.</p>
+<p>Stephen Hawkings artikelen uit 1974 en 1975 beschreven een mechanisme waarbij zwarte gaten straling uitzenden. Kwantumeffecten nabij de horizon produceren deeltjesparen: één wordt gevangen, één ontsnapt. Na verloop van tijd verliest het zwarte gat massa en verdampt het.</p>
+<p>De onopgeloste vraag: als een zwart gat volledig verdampt, is de informatie dan vernietigd? De meeste fysici geloven nu van niet — informatie blijft bewaard, maar is verspreid over de straling in een praktisch onherstelbare vorm.</p>
+<div class="pull">Informatie verdwijnt niet. Ze verspreidt zich. Dit is het principe dat Hawkingstraling verbindt met cryptografische verspreiding — niet alleen als metafoor, maar als structurele bewering over wat informatie is en hoe ze zich gedraagt.</div>`,
+  s5_label: 'Waar het wordt gebruikt',
+  s5: `<p>Verspreiding en drempelcryptografie komen op meer plaatsen voor dan de meeste studenten beseffen.</p>
+<p><span class="strong">Gedistribueerde opslag.</span> Systemen zoals IPFS gebruiken erasure coding — een naast familielid van IDA — om te garanderen dat geen enkele server een volledig bestand bewaart.</p>
+<p><span class="strong">Sleutelbeheer.</span> Hardware-beveiligingsmodules bij banken gebruiken vaak Shamirs geheimsdeling om de hoofdsleutel over meerdere beheerders te verdelen.</p>
+<p><span class="strong">Blockchain.</span> Consensusmechanismen zijn gebouwd op drempelaannames: k van n validators moeten instemmen voordat een transactie wordt bevestigd.</p>
+${makeDispersioFig({centralised:'gecentraliseerd',distributed:'gedistribueerd',server:'SERVER',singlept:'enkel punt',danger:'enkel storingspunt',resilient:'geen enkel storingspunt',caption2:'Figuur 2 — Gecentraliseerde vs. verspreide architectuur.'})}`,
+  s6_label: 'Een noot over taal',
+  s6: `<p>Dit platform is beschikbaar in tweeëntwintig talen. Dat getal is niet gekozen voor volledigheid. Het is gekozen door de oorsprong van woorden te volgen.</p>
+<p>Het woord <span class="em">cijfer</span> — <span class="em">cifra</span> — is via het Arabisch (<span class="em">ṣifr</span>) de Europese talen binnengekomen, dat zelf uit het Sanskrit (<span class="em">śūnya</span>) komt: de leegte, de nul.</p>
+<p>De talen hier — Bretons, Occitaans, Baskisch, Reto-Romaans, Luxemburgs, Catalaans en andere — zijn niet opgenomen omdat ze grote sprekerspopulaties hebben. Ze zijn opgenomen omdat begrip het helderst is in de taal die het dichtst bij je staat.</p>
+<div class="pull">Dit is geen politiek standpunt. Het is een persoonlijk standpunt. Dit zijn talen waarin ik persoonlijke redenen heb om te vertrouwen. De selectie weerspiegelt dat vertrouwen — niets meer, en niets minder.</div>
+<p>De boekenplank hieronder is geen decoratie. Dit zijn de werkelijke boeken waaruit dit project is opgebouwd. Etymologie eerst. Syntaxis daarna. Fysica ernaast.</p>
+<div class="shelf">
+  <div class="shelf-header"><div class="shelf-header-cell">titel</div><div class="shelf-header-cell">taallas</div><div class="shelf-header-cell">rol in dit project</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Etymologisch Woordenboek — van Dale</div><div class="shelf-cell shelf-lang">NL / Nederlands</div><div class="shelf-cell shelf-note">Nederlands etymologisch woordenboek. Bron voor het traceren van woordoorsprongen door Germaanse takken naar minderheidstalverwanten.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">KLUGE Etymologisches Wörterbuch, 24. Auflage</div><div class="shelf-cell shelf-lang">DE / Duits</div><div class="shelf-cell shelf-note">Standaard Duits etymologisch naslagwerk. Gebruikt voor het traceren van cifra → Ziffer → ṣifr via het Germaanse pad.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">W. Meyer-Lübke — Romanisches etymologisches Wörterbuch</div><div class="shelf-cell shelf-lang">Romaanse talen</div><div class="shelf-cell shelf-note">De canonieke referentie voor Romaanse etymologie. Basis voor de taalkeuze FR, ES, PT, IT, OC, CA, GL, CO, RM.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Le Petit Robert 2022</div><div class="shelf-cell shelf-lang">FR / Frans</div><div class="shelf-cell shelf-note">Frans woordenboek met etymologie. Anker voor de varianten FR, FR-BE, FR-CH, FR-CA.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">The Oxford Handbook of Comparative Syntax — Cinque & Kayne</div><div class="shelf-cell shelf-lang">Takoverschrijdend</div><div class="shelf-cell shelf-note">Structurele referentie voor begrip van hoe concepten vertalen — niet alleen woorden.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Linguistic Polyphony — Nølke</div><div class="shelf-cell shelf-lang">IS / Noordelijk</div><div class="shelf-cell shelf-note">Kader voor begrip van hoe één uiting meerdere stemmen draagt — hier toegepast op het idee dat één algoritme-beschrijving in elke taal anders moet spreken.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Stephen Hawking — A Brief History of Time</div><div class="shelf-cell shelf-lang">EN / Fysica</div><div class="shelf-cell shelf-note">Het beginpunt. Niet als fysicaboek, maar als bewijs dat de afstand tussen een concept en het begrijpen ervan overbrugd kan worden.</div></div>
+</div>
+<div class="arlen-note">De leeslat op deze foto is een gekleurd overlay voor het Irlen-syndroom — een visuele verwerkingstoestand waarbij contrast, spatiëring en de relatie tussen tekst en achtergrond bronnen van vermoeidheid worden in plaats van neutrale leesoppervlakken. Ze is hier opgenomen niet als openbaring, maar als context: de vraag hoe iemand informatie ontvangt is niet los te zien van de vraag in welke taal ze aankomt.</div>`,
+  s8_label: 'De omgeving waarin dit gebouwd is',
+  s8: `<p>De machine op deze foto is een ThinkPad. Een oudere CPU-generatie. Hij draait Linux.</p>
+<p>Die keuze was geen voorkeur. Het was een beperking die een overtuiging werd.</p>
+<p>In Japan is de consumentenhardwaremarkt bijna volledig naar Windows verschoven. SSD-uitgeruste machines, GPU-capabele machines — ze bestaan, maar ze komen met Windows. Linux-ondersteuning is jaar na jaar smaller geworden. HDD-cultuur hield hier langer aan dan elders. Machines met echte Linux-compatibiliteit, toegankelijke bootconfiguratie, RAM en opslag die vervangen kunnen worden zonder tegen het systeem te vechten — die machines worden steeds zeldzamer.</p>
+<p>Deze ThinkPad is tweedehands. De SSD is vervangen. De RAM is uitgebreid. Dat zijn dingen die deze machine toestaat, die de meeste huidige Japanse consumentenhardware niet toestaat.</p>
+<div class="pull">De reden om Linux te kiezen is geen ideologie. Het is vertrouwen. Een besturingssysteem dat geen advertenties serveert. Een ontwikkelomgeving waar JavaScript schoon vanaf de commandoregel werkt. Een terminal die zich gedraagt zoals een terminal zich moet gedragen. Dit zijn geen luxefuncties. Dit zijn de minimumvoorwaarden om het werk te doen.</div>
+<p>cifra/dispersio bouwen — de visualisaties, de grafiekmotor, de editor, het tweeëntwintig-talensysteem — is gedaan op deze machine, in deze omgeving, onder deze beperkingen. Het heeft de limiet bereikt van wat de hardware kan dragen. Dat is geen klacht. Het is een registratie.</p>
+<p>Ik ben nooit formeel getest op het Irlen-syndroom. Ik wilde dat wel. In Japan vereist de weg naar evaluatie een voorafgaande diagnose van een ontwikkelingsstoornis. Het Irlen-syndroom wordt niet als onafhankelijk erkend. Om de evaluatie te krijgen, moet je eerst een label accepteren dat misschien niet past.</p>
+<p>Ik beheer dit al meer dan vijftien jaar zonder formele diagnose. De leeslat is geen recept. Het is iets wat ik gevonden heb dat werkte, en dat ik heb gehouden.</p>
+<div class="pull">De visuele stress van werken in een slecht aangepaste omgeving — onjuist contrast, niet-ondersteunde weergave-instellingen, de opgestapelde wrijving van een scherm dat geen rekening houdt met hoe licht aankomt — staat niet los van de moeilijkheid van dit bouwen. Het maakt er deel van uit. Dit is hoe de omgeving eruitziet van binnenuit.</div>
+<p>Ik weet niet wat het juiste antwoord is. Wat ik kan zeggen is dat dit platform — de talen, de diagrammen, de zorg voor leesbaarheid — afkomstig is van iemand die weet wat het kost als informatie niet gevormd is voor de persoon die het ontvangt.</p>
+<p>Dat is geen referentie. Het is een reden.</p>`,
+  s7_label: 'Referenties',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>
+<div class="ref"><span class="ref-num">[4]</span><span>Hawking, S.W. (1975). Particle creation by black holes. <em>Communications in Mathematical Physics</em>, 43(3), 199–220.</span></div>`,
+};
+
+// ── LB ────────────────────────────────────────────────────────────────
+CONTENT['lb'] = {
+  s1_label: 'Wat dat ass',
+  s1: `<p>Dëst Dokument existéiert fir eng eenzeg Ursaach: eng schwéier Iddi zougänglech ze maachen.</p>
+<p>Kryptografesch Verbreedungsalgorithmen — an d'verdeelt Systemer, déi se méiglech maachen — sinn net intuitiv. Si goufen net sou entworf. Si sinn aus enger konkreeter historescher Suergen entstanen: wat geschitt wann e eenzege Kontrollpunkt e eenzege Feelpunkt gëtt — oder schlëmmer, e eenzege Muechpunkt.</p>
+<div class="pull">Dat hei ass kee Léierbuch. Et ass eng guidéiert Kaart — vum Konzept iwwer d'Diagram zum Code — geschriwwen fir Schüler a Studenten déi wëlle verstoen, net nëmme benotzen.</div>`,
+  s2_label: 'D\'Haaptiddi: Verbreedung',
+  s2: `<p>D'Wuert <span class="em">dispersio</span> kënnt aus dem Latäin: strooën, verbreeden. Am réimesche Gebrauch hat et keng negativ Konnotatioun. Strooën war kee Verloscht. Et war Verdeelung.</p>
+<p>An der Kryptografie ass Informatiounsverbreedung eng präzis Technik. Eng Noriicht <span class="strong">M</span> gëtt a <span class="strong">n</span> Fragmente codéiert. All <span class="strong">k</span> vun dëse Fragmente — wou k méi kleng ass wéi n — si genuch fir M exakt ze rekonstruéieren.</p>
+${makeDiagram({msg:'M',encode:'codéieren',fragments:'Fragmente',any:'all',of:'vun',reconstruct:'rekonstruéieren',caption:'Figur 1 — Informatiounsverbreedungsalgorithmus (IDA). [Rabin, 1989]'})}
+<div class="pull">De verdeelte Algorithmus gouf net erfonnt well Dezentraliséierung a Mode ass. Hien gouf erfonnt well Zentraliséierung geféierlech ass — an d'Gefor ass strukturell, net zufälleg.</div>`,
+  s3_label: 'Wou et hierkënnt',
+  s3: `<p>De formelle Fundament ass Michael O. Rabin säin Artikel vun 1989. Rabin huet gewisen datt all Noriicht sou a Fragmente opgedeelt ka ginn datt d'Relatioun tëscht Fragmente an Original mathematesch exakt ass.</p>
+<p>Adi Shamir säin Artikel vun 1979 huet d'Geheimnis-Deelen duerch polynomiale Interpolatioun iwwer endleche Kierper agefouert. Béid beschreiwen Schwellwertsystemer wou k Parteien — an nëmmen k Parteien — e Geheimnis rekonstruéiere kënnen.</p>`,
+  s4_label: 'D\'Hawking-Verbindung',
+  s4: `<p>Stephen Hawking seng Artikelen vun 1974 a 1975 hunn e Mechanismus beschriwwen duerch deen schwaarz Lächer Stralung emittéieren. Quanteeffekter no um Horizont produzéieren Deelcherpären: een gëtt gefaangen, een entkënnt.</p>
+<div class="pull">Informatioun verschwënnt net. Si verbreede sech. Dat ass d'Prinzip dat Hawking-Stralung mat kryptografescher Verbreedung verbënnt — net nëmme als Metapher, mee als strukturell Behaaptung iwwer wat Informatioun ass.</div>`,
+  s5_label: 'Wou et benotzt gëtt',
+  s5: `<p><span class="strong">Verdeelt Späichere.</span> Systemer wéi IPFS benotzen Erasure Coding — e no Verwandten vum IDA — fir sécherzestellen datt keen eenzege Server eng komplett Datei hält.</p>
+<p><span class="strong">Schlësselgestioun.</span> Hardware-Sécherheetmodulen a Banken benotzen dacks Shamir säi Geheimnis-Deelen fir de Masterkey op verschidde Verwaler opzedeelen.</p>
+${makeDispersioFig({centralised:'zentraliséiert',distributed:'verdeelt',server:'SERVER',singlept:'eenzege Punkt',danger:'eenzege Feelpunkt',resilient:'keen eenzege Feelpunkt',caption2:'Figur 2 — Zentraliséiert vs. verdeelt Architektur.'})}`,
+  s6_label: 'Eng Notiz iwwer Sprooch',
+  s6: `<p>Dës Plattform ass a véierzwanzeg Sproochen disponibel. Dës Zuel gouf net fir Vollständegkeet gewielt. Si gouf gewielt andeems dem Urspronk vun de Wierder gefollegt gouf.</p>
+<p>D'Wuert <span class="em">cifra</span> — Ziffer — ass duerch d'Arabesch (<span class="em">ṣifr</span>) an d'europäesch Sproochen eragaangen, dat selwecht aus dem Sanskrit (<span class="em">śūnya</span>) kënnt: d'Leeregkeet, d'Null.</p>
+<div class="pull">Dat ass keng politesch Positioun. Et ass eng perséinlech. Dat sinn Sproochen an deenen ech perséinlech Grënn hunn ze vertrauen. D'Auswiel reflektéiert dëst Vertrauen — näischt méi, a näischt manner.</div>`,
+  s8_label: 'D\'Ëmfeld an deem dat gebaut gouf',
+  s8: `<p>D'Maschinn op dësem Foto ass e ThinkPad. Eng eeler CPU-Generatioun. Hien leeft ënner Linux.</p>
+<p>Dës Wiel war keng Preferenz. Et war eng Aschränkung déi eng Iwwerzeegung gouf. A Japan ass de Konsumentenhardwaremaart bal komplett Richtung Windows gaangen. Linux-Support gouf Joer fir Joer méi schmal.</p>
+<div class="pull">De Grond fir Linux ze wielen ass keng Ideologie. Et ass Vertrauen. E Betribssystem dat keng Reklamme servéiert. Eng Entwécklungsëmfeld wou JavaScript propper vun der Kommandozeil leeft. Dat sinn keng Luxusfunktiounen. Dat sinn d'Mindestbedingungen fir d'Aarbecht ze maachen.</div>
+<p>Ech gouf ni formell op den Irlen-Syndrom getescht. Ech wollt dat awer. A Japan erfuerdert de Wee zur Evaluatioun eng viregte Diagnos vun enger Entwécklungsstéierung. Den Irlen-Syndrom gëtt net als onofhängeg unerkannt.</p>
+<p>Ech maachen dat zënter méi wéi fofzéng Joer ouni formell Diagnos. Dat ass kee Rapport. Et ass eng Raison.</p>`,
+  s7_label: 'Referenzen',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── IS ────────────────────────────────────────────────────────────────
+CONTENT['is'] = {
+  s1_label: 'Hvað þetta er',
+  s1: `<p>Þetta skjal er til af einni ástæðu: að gera erfiða hugmynd aðgengilega.</p>
+<p>Dulmálsdreifingarreiknirit — og dreifðu kerfin sem þau gera möguleik á — eru ekki leiðandi. Þau voru ekki þannig hönnuð. Þau komu fram úr sérstakri sögulegri áhyggjuefni: hvað gerist þegar eitt stjórnunarmiðstöð verður einn bilunarpunktur, eða verr, einn valdapunktur.</p>
+<div class="pull">Þetta er ekki kennslubók. Þetta er leiðarvísir — frá hugmynd til myndrits til kóða — skrifaður fyrir nemendur á framhaldsskóla- og háskólastigi sem vilja skilja, ekki bara nota.</div>`,
+  s2_label: 'Meginhugmyndin: dreifing',
+  s2: `<p>Orðið <span class="em">dispersio</span> kemur úr latínu: að strá, að dreifa. Í rómverskri notkun bar það enga neikvæða merkingu. Að strá var ekki tap. Það var dreifing.</p>
+<p>Í dulmálsfræði er upplýsingadreifing nákvæm tækni. Skilaboð <span class="strong">M</span> eru kóðuð í <span class="strong">n</span> brot. Hvaðeina <span class="strong">k</span> af þessum brotum — þar sem k er minna en n — duga til að endurbyggja M nákvæmlega.</p>
+${makeDiagram({msg:'M',encode:'kóða',fragments:'brot',any:'hvaðeina',of:'af',reconstruct:'endurbyggja',caption:'Mynd 1 — Upplýsingadreifingarreiknirit (IDA). [Rabin, 1989]'})}
+<div class="pull">Dreifða reikniritið var ekki fundið upp vegna þess að dreifing er í tísku. Það var fundið upp vegna þess að miðstýring er hættuleg — og hættan er byggingarlegar, ekki tilviljunarkenndar.</div>`,
+  s3_label: 'Hvaðan það kemur',
+  s3: `<p>Formlegt grundvöllurinn er grein Michael O. Rabin frá 1989. Rabin sýndi að hvaða skilaboð sem er megi skipta í brot þannig að samband brota og upprunalegs sé stærðfræðilega nákvæmt.</p>
+<p>Samhliða þessu kynnti grein Adi Shamir frá 1979 leyndomsdeilingu með margliðubrúun yfir endanlegar svið. Bæði lýsa þröskuldskerfi þar sem k aðilar — og aðeins k aðilar — geta endurbyggt leyndarmál.</p>`,
+  s4_label: 'Hawking-tenginginn',
+  s4: `<p>Greinar Stephens Hawkings frá 1974 og 1975 lýstu tækni þar með svarthol gefa frá sér geislun. Skammtaáhrif nálægt sjóndeildarhringnum framleiða agnapar: eitt er gripið, eitt flýr.</p>
+<div class="pull">Upplýsingar hverfa ekki. Þær dreifist. Þetta er meginreglan sem tengir Hawking-geislun við dulmálsdreifingu — ekki aðeins sem líking, heldur sem byggingarleg fullyrðing um hvað upplýsingar eru.</div>`,
+  s5_label: 'Hvar það er notað',
+  s5: `<p><span class="strong">Dreifð geymsla.</span> Kerfi eins og IPFS nota eyðingarkóðun — náinn frændi IDA — til að tryggja að einn þjónn haldi aldrei fullkomna skrá.</p>
+<p><span class="strong">Lykilstjórnun.</span> Vélbúnaðaröryggisskiptar í bönkum nota oft leyndomsdeilingu Shamir til að dreifa aðallyklinum meðal margra varðmanna.</p>
+${makeDispersioFig({centralised:'miðstýrt',distributed:'dreift',server:'ÞJÓNN',singlept:'einstakur punktur',danger:'einstakur bilunarpunktur',resilient:'enginn einstakur bilunarpunktur',caption2:'Mynd 2 — Miðstýrt vs. dreift skipulag.'})}`,
+  s6_label: 'Athugasemd um tungumál',
+  s6: `<p>Þetta kerfi er tiltækt á tveggja og tuttugu tungumálum. Þetta tala var ekki valin fyrir heildarniðurstöður. Hún var valin með því að fylgja uppruna orða.</p>
+<p>Orðið <span class="em">cifra</span> — tala, leyndarmál — kom inn í evrópsk tungumál í gegnum arabísku (<span class="em">ṣifr</span>), sem sjálft kom úr sanskrít (<span class="em">śūnya</span>): tómið, núllið.</p>
+<div class="pull">Þetta er ekki pólítískt afstaða. Það er persónulegt. Þetta eru tungumál sem ég hef persónulegar ástæður til að treysta. Valið endurspeglar þessa trú — ekkert meira, og ekkert minna.</div>`,
+  s8_label: 'Umhverfið sem þetta var byggt í',
+  s8: `<p>Vélin á þessari mynd er ThinkPad. Eldri örgjörvaætt. Hún keyrir Linux.</p>
+<p>Þetta val var ekki kjörstilling. Það var takmörkun sem varð sannfæring. Á Japani hefur neytendavélamarkaðurinn flust næstum að öllu leyti yfir í Windows. Linux-stuðningur hefur þrengst ár eftir ár.</p>
+<div class="pull">Ástæðan fyrir því að velja Linux er ekki hugmyndafræði. Það er traust. Stýrikerfi sem þjónar ekki auglýsingum. Þróunarumhverfi þar sem JavaScript keyrir hreint frá skipanalínu. Þetta eru ekki lúxuseiginleikar. Þetta eru lágmarksskilyrðin til að gera verkið.</div>
+<p>Ég hef aldrei verið formlega metinn á Irlen-heilkenni. Ég vildi vera það. Á Japani krefst leiðin til mats fyrirfram greiningar á þroskahömlun. Irlen-heilkenni er ekki viðurkennt sem sjálfstætt.</p>
+<p>Ég hef verið að stjórna þessu án formlegrar greiningar í meira en fimmtán ár. Þetta er ekki viðurkenningarbréf. Það er ástæða.</p>`,
+  s7_label: 'Heimildir',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── CA ────────────────────────────────────────────────────────────────
+CONTENT['ca'] = {
+  s1_label: 'Què és això',
+  s1: `<p>Aquest document existeix per una sola raó: fer accessible una idea difícil.</p>
+<p>Els algorismes de dispersió criptogràfica — i els sistemes distribuïts que fan possibles — no són intuïtius. No van ser dissenyats per ser-ho. Van sorgir d'una preocupació històrica concreta: què passa quan un punt únic de control es converteix en un punt únic de fallada, o pitjor, en un punt únic de poder.</p>
+<div class="pull">Això no és un llibre de text. És un mapa guiat — del concepte al diagrama al codi — escrit per a estudiants de secundària, batxillerat i universitat que volen entendre, no només usar.</div>`,
+  s2_label: 'La idea central: la dispersió',
+  s2: `<p>La paraula <span class="em">dispersio</span> ve del llatí: dispersar, escampar. En l'ús romà no tenia connotació negativa. Dispersar no era perdre. Era distribuir.</p>
+<p>En criptografia, la dispersió d'informació és una tècnica precisa. Un missatge <span class="strong">M</span> es codifica en <span class="strong">n</span> fragments. Qualssevol <span class="strong">k</span> d'aquests fragments — on k és menor que n — són suficients per reconstruir M exactament.</p>
+${makeDiagram({msg:'M',encode:'codificar',fragments:'fragments',any:'qualssevol',of:'de',reconstruct:'reconstruir',caption:'Figura 1 — Algorisme de Dispersió d\'Informació (IDA). [Rabin, 1989]'})}
+<div class="pull">L'algorisme distribuït no es va inventar perquè la descentralització estigui de moda. Es va inventar perquè la centralització és perillosa — i el perill és estructural, no accidental.</div>`,
+  s3_label: 'D\'on ve',
+  s3: `<p>El fonament formal és l'article de Michael O. Rabin de 1989. Rabin va demostrar que qualsevol missatge pot dividir-se en fragments de tal manera que la relació entre fragments i original sigui matemàticament exacta.</p>
+<p>L'article d'Adi Shamir de 1979 va introduir el repartiment de secrets mitjançant interpolació polinòmica sobre cossos finits. Tots dos descriuen sistemes de llindar on k parts — i només k parts — poden reconstruir un secret.</p>`,
+  s4_label: 'La connexió amb Hawking',
+  s4: `<p>Els articles de Stephen Hawking de 1974 i 1975 van descriure un mecanisme pel qual els forats negres emeten radiació. Els efectes quàntics prop de l'horitzó produeixen parells de partícules: una cau a dins, l'altra escapa.</p>
+<div class="pull">La informació no desapareix. Es dispersa. Aquest és el principi que connecta la radiació de Hawking amb la dispersió criptogràfica — no només com a metàfora, sinó com a afirmació estructural sobre què és la informació i com es comporta.</div>`,
+  s5_label: 'On s\'utilitza',
+  s5: `<p><span class="strong">Emmagatzematge distribuït.</span> Sistemes com IPFS utilitzen codificació d'esborrat — un parent proper de l'IDA — per garantir que cap servidor únic tingui un fitxer complet.</p>
+<p><span class="strong">Gestió de claus.</span> Els mòduls de seguretat de maquinari a la banca sovint utilitzen el repartiment de secrets de Shamir per distribuir la clau mestra entre múltiples custodis.</p>
+${makeDispersioFig({centralised:'centralitzat',distributed:'distribuït',server:'SERVIDOR',singlept:'punt únic',danger:'punt únic de fallada',resilient:'cap punt únic de fallada',caption2:'Figura 2 — Arquitectura centralitzada enfront de dispersa.'})}`,
+  s6_label: 'Una nota sobre la llengua',
+  s6: `<p>Aquesta plataforma és disponible en vint-i-dues llengües. Aquest nombre no es va escollir per cobrir-les totes. Es va escollir seguint l'origen de les paraules.</p>
+<p>La paraula <span class="em">xifra</span> — <span class="em">cifra</span> — va entrar a les llengües europees a través de l'àrab (<span class="em">ṣifr</span>), que al seu torn ve del sànscrit (<span class="em">śūnya</span>): el buit, el zero.</p>
+<div class="pull">Això no és una posició política. És una posició personal. Són llengües en les quals tinc raons personals per confiar. La selecció reflecteix aquesta confiança — res més, i res menys.</div>`,
+  s8_label: 'L\'entorn en el qual s\'ha construït',
+  s8: `<p>La màquina en aquesta fotografia és un ThinkPad. Una generació de CPU antiga. Funciona amb Linux.</p>
+<p>Aquesta elecció no va ser una preferència. Va ser una limitació que es va convertir en una convicció. Al Japó, el mercat de maquinari de consum s'ha mogut gairebé completament cap a Windows. El suport de Linux s'ha anat reduint any rere any.</p>
+<div class="pull">La raó per triar Linux no és ideologia. És confiança. Un sistema operatiu que no serveix anuncis. Un entorn de desenvolupament on JavaScript funciona net des de la línia d'ordres. Aquestes no són funcions de luxe. Són les condicions mínimes per fer la feina.</div>
+<p>Mai no he estat avaluat formalment per la Síndrome d'Irlen. Ho volia fer. Al Japó, el camí cap a l'avaluació requereix un diagnòstic previ de discapacitat del desenvolupament. La Síndrome d'Irlen no és reconeguda com a independent.</p>
+<p>Porto més de quinze anys gestionant això sense diagnòstic formal. Això no és una acreditació. És una raó.</p>`,
+  s7_label: 'Referències',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── EU ────────────────────────────────────────────────────────────────
+CONTENT['eu'] = {
+  s1_label: 'Zer den hau',
+  s1: `<p>Dokumentu hau arrazoi bakarrarengatik existitzen da: ideia zail bat eskuragarri egiteko.</p>
+<p>Dispersio kriptografikoko algoritmoak — eta hauek posible egiten dituzten sistema banatuak — ez dira intuitiboak. Ez ziren horrela diseinatu. Kezka historiko zehatz batetik sortu ziren: zer gertatzen da kontrol-puntu bakar bat akats-puntu bakar bihurtzen denean — edo okerrago, botere-puntu bakar bat.</p>
+<div class="pull">Hau ez da testu-liburua. Gida-mapa bat da — kontzeptutik diagramara, koderaino — bigarren hezkuntza eta unibertsitateko ikasleentzat idatzita, ulertzen nahi dutenek, ez soilik erabiltzen.</div>`,
+  s2_label: 'Ideia nagusia: dispersioa',
+  s2: `<p><span class="em">Dispersio</span> hitza latinezkoa da: sakabanatu, zabaldu. Erabilera erromatarrak ez zuen konotazio negatiboarekin. Sakabanatzea ez zen galera. Banaketa zen.</p>
+<p>Kriptografian, informazioaren dispersioa teknika zehatza da. <span class="strong">M</span> mezu bat <span class="strong">n</span> zatitan kodetzen da. Zati horien edozein <span class="strong">k</span> — k n baino txikiagoa den bitartean — nahikoa da M zehatz-mehatz berreraikitzeko.</p>
+${makeDiagram({msg:'M',encode:'kodetu',fragments:'zatiak',any:'edozein',of:'/',reconstruct:'berreraiki',caption:'1. Irudia — Informazio Dispersio Algoritmoa (IDA). [Rabin, 1989]'})}
+<div class="pull">Algoritmo banatua ez zen asmatu deszentralizazioa modan dagoelako. Zentralizazioa arriskutsua delako asmatu zen — eta arriskua estrukturala da, ez kasuala.</div>`,
+  s3_label: 'Nondik datorren',
+  s3: `<p>Oinarri formala Michael O. Rabinen 1989ko artikulua da. Rabin-ek frogatu zuen edozein mezuk zatitan bana daitekeela, zatien eta jatorrizkoaren arteko harremana matematikoki zehatza izan dadin.</p>
+<p>Adi Shamir-en 1989ko artikuluak sekretuen partekatzea sartu zuen eremu finituetako interpolazio polinomialaren bidez. Biek deskribatzen dituzte atalase-sistemak, non k alderdik — eta k alderdik bakarrik — sekretu bat berreraiki dezaketen.</p>`,
+  s4_label: 'Hawking-en lotura',
+  s4: `<p>Stephen Hawking-en 1974ko eta 1975eko artikuluek zulo beltzak erradiazioa emititzen duten mekanismo bat deskribatu zuten. Horizonte ondoko efektu kuantikoak partikulako pareak sortzen dituzte: bat harrapatzen da, bat ihes egiten du.</p>
+<div class="pull">Informazioa ez da desagertzen. Dispersatzen da. Hori da Hawking erradiazioa dispersio kriptografikoarekin lotzen duen printzipioa — ez metafora gisa soilik, baizik eta informazioa zer den eta nola jokatzen duen buruzko baieztapen estrukturala gisa.</div>`,
+  s5_label: 'Non erabiltzen den',
+  s5: `<p><span class="strong">Biltegiratze banatura.</span> IPFS bezalako sistemek ezabaketa-kodeketa erabiltzen dute — IDA-ren senide hurbila — zerbitzari bakar batek fitxategi osoa ez edukitzeko.</p>
+<p><span class="strong">Gako-kudeaketa.</span> Bankuetako hardware segurtasun moduluek maiz erabiltzen dute Shamir-en sekretuen partekatzea gako nagusia zaintzaile anitzen artean banatzeko.</p>
+${makeDispersioFig({centralised:'zentralizatua',distributed:'banatua',server:'ZERBITZARIA',singlept:'puntu bakarra',danger:'akats-puntu bakarra',resilient:'ez akats-puntu bakarrik',caption2:'2. Irudia — Arkitektura zentralizatua eta dispersatua.'})}`,
+  s6_label: 'Hizkuntzari buruzko oharra',
+  s6: `<p>Plataforma hau hogeita bi hizkuntzetan eskuragarri dago. Zenbaki hori ez zen aukeratu osotasunagatik. Hitzen jatorria jarraituz aukeratu zen.</p>
+<p><span class="em">Cifra</span> hitza — zifra — arabieratik (<span class="em">ṣifr</span>) sartu zen Europako hizkuntzetan, eta hori bera sanskritotik (<span class="em">śūnya</span>) dator: hutsunea, zeroa.</p>
+<div class="pull">Hau ez da jarrera politikoa. Pertsonala da. Pertsonalki fidatzeko arrazoiak ditudan hizkuntzak dira. Aukeraketak konfiantza hori islatzen du — ez gehiago, eta ez gutxiago.</div>`,
+  s8_label: 'Hau eraiki den ingurunea',
+  s8: `<p>Argazki honetan agertzen den makina ThinkPad bat da. CPU belaunaldi zaharragoa. Linux-en funtzionatzen du.</p>
+<p>Aukeraketa hori ez zen nahiago izatea. Sinesmen bihurtu zen murrizketa bat zen. Japonian, kontsumitzaileen hardware merkatua ia erabat Windows-era mugitu da. Linux laguntza urtetik urtera murriztu da.</p>
+<div class="pull">Linux aukeratzeko arrazoia ez da ideologia. Konfiantza da. Iragarkirik zerbitzatzen ez duen sistema eragile bat. JavaScript komando-lerrotik garbi funtzionatzen duen garapen-ingurune bat. Hauek ez dira luxuzko ezaugarriak. Lana egiteko gutxieneko baldintzak dira.</div>
+<p>Irlen Sindromearengatik inoiz ez naiz formalki ebaluatu. Nahi nuen. Japonian, ebaluaziorako bideak garapen-desgaitasunaren aurreko diagnostikoa eskatzen du. Irlen Sindromea ez da independente gisa aitortzen.</p>
+<p>Hamabost urte baino gehiago daramatzat diagnostiko formalik gabe hau kudeatzen. Hau ez da akreditazioa. Arrazoi bat da.</p>`,
+  s7_label: 'Erreferentziak',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── GL ────────────────────────────────────────────────────────────────
+CONTENT['gl'] = {
+  s1_label: 'Que é isto',
+  s1: `<p>Este documento existe por un único motivo: facer accesible unha idea difícil.</p>
+<p>Os algoritmos de dispersión criptográfica — e os sistemas distribuídos que fan posibles — non son intuitivos. Non foron deseñados para selo. Xurdiron dunha preocupación histórica concreta: que ocorre cando un punto único de control se converte nun punto único de fallo, ou peor, nun punto único de poder.</p>
+<div class="pull">Isto non é un libro de texto. É un mapa guiado — do concepto ao diagrama ao código — escrito para estudantes de secundaria e universidade que queren entender, non só usar.</div>`,
+  s2_label: 'A idea central: a dispersión',
+  s2: `<p>A palabra <span class="em">dispersio</span> vén do latín: dispersar, espallar. No uso romano non tiña connotación negativa. Dispersar non era perder. Era distribuír.</p>
+<p>En criptografía, a dispersión de información é unha técnica precisa. Unha mensaxe <span class="strong">M</span> codifícase en <span class="strong">n</span> fragmentos. Calesquera <span class="strong">k</span> deses fragmentos — onde k é menor que n — son suficientes para reconstruír M exactamente.</p>
+${makeDiagram({msg:'M',encode:'codificar',fragments:'fragmentos',any:'calesquera',of:'de',reconstruct:'reconstruír',caption:'Figura 1 — Algoritmo de Dispersión de Información (IDA). [Rabin, 1989]'})}
+<div class="pull">O algoritmo distribuído non foi inventado porque a descentralización estea de moda. Foi inventado porque a centralización é perigosa — e o perigo é estrutural, non accidental.</div>`,
+  s3_label: 'De onde vén',
+  s3: `<p>O fundamento formal é o artigo de Michael O. Rabin de 1989. Rabin demostrou que calquera mensaxe pode dividirse en fragmentos de tal xeito que a relación entre fragmentos e orixinal sexa matematicamente exacta.</p>
+<p>O artigo de Adi Shamir de 1979 introduciu o reparto de segredos mediante interpolación polinomial sobre corpos finitos. Ambos describen sistemas de limiar onde k partes — e só k partes — poden reconstruír un segredo.</p>`,
+  s4_label: 'A conexión con Hawking',
+  s4: `<p>Os artigos de Stephen Hawking de 1974 e 1975 describiron un mecanismo polo cal os buratos negros emiten radiación. Os efectos cuánticos preto do horizonte producen pares de partículas: un cae dentro, o outro escapa.</p>
+<div class="pull">A información non desaparece. Diséminase. Este é o principio que conecta a radiación de Hawking coa dispersión criptográfica — non só como metáfora, senón como afirmación estrutural sobre que é a información e como se comporta.</div>`,
+  s5_label: 'Onde se usa',
+  s5: `<p><span class="strong">Almacenamento distribuído.</span> Sistemas como IPFS usan codificación de borrado para garantir que ningún servidor único teña un ficheiro completo.</p>
+<p><span class="strong">Xestión de chaves.</span> Os módulos de seguridade de hardware na banca adoitan usar o reparto de segredos de Shamir para distribuír a chave mestra entre múltiples custodios.</p>
+${makeDispersioFig({centralised:'centralizado',distributed:'distribuído',server:'SERVIDOR',singlept:'punto único',danger:'punto único de fallo',resilient:'ningún punto único de fallo',caption2:'Figura 2 — Arquitectura centralizada fronte a dispersa.'})}`,
+  s6_label: 'Unha nota sobre a lingua',
+  s6: `<p>Esta plataforma está dispoñible en vinte e dúas linguas. Ese número non foi escollido por cobertura. Foi escollido seguindo a orixe das palabras.</p>
+<p>A palabra <span class="em">cifra</span> entrou nas linguas europeas a través do árabe (<span class="em">ṣifr</span>), que veu do sánscrito (<span class="em">śūnya</span>): o baleiro, o cero.</p>
+<div class="pull">Esta non é unha posición política. É unha posición persoal. Son linguas nas que teño razóns persoais para confiar. A selección reflicte esa confianza — nada máis, e nada menos.</div>`,
+  s8_label: 'O ambiente no que isto foi construído',
+  s8: `<p>A máquina nesta fotografía é un ThinkPad. Unha xeración de CPU antiga. Funciona con Linux.</p>
+<p>Esa elección non foi unha preferencia. Foi unha restrición que se converteu nunha convicción. No Xapón, o mercado de hardware de consumo moveuse case completamente cara a Windows. O soporte de Linux reduciuse ano tras ano.</p>
+<div class="pull">A razón para escoller Linux non é ideoloxía. É confianza. Un sistema operativo que non serve anuncios. Un ambiente de desenvolvemento onde JavaScript funciona limpo desde a liña de ordes. Estas non son funcionalidades de luxo. Son as condicións mínimas para facer o traballo.</div>
+<p>Nunca fun avaliado formalmente polo Síndrome de Irlen. Quería selo. No Xapón, o camiño cara á avaliación require un diagnóstico previo de discapacidade do desenvolvemento. O Síndrome de Irlen non é recoñecido como independente.</p>
+<p>Levo máis de quince anos xestionando isto sen diagnóstico formal. Iso non é unha acreditación. É un motivo.</p>`,
+  s7_label: 'Referencias',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── OC ────────────────────────────────────────────────────────────────
+CONTENT['oc'] = {
+  s1_label: 'Çò qu\'es aquò',
+  s1: `<p>Aqueste document existís per una sola rason : render accesibla una idèa dificila.</p>
+<p>Los algoritmes de dispersión criptografica — e los sistèmas distribuits qu'an possible — son pas intuitius. Foguèron pas dissenhats per l'èsser. Emergiguèron d'una preocupacion istorica concreta : çò que se passa quand un punt unique de contraròtle devent un punt unique de fracàs, o mai pièger, un punt unique de poder.</p>
+<div class="pull">Aquò es pas un manual. Es una mapa guidada — del concèpte al diagrama al còdi — escrita per estudiants de secundari e d'universitat que vòlon comprendre, pas sol utilizar.</div>`,
+  s2_label: 'L\'idèa centrala : la dispersión',
+  s2: `<p>Lo mot <span class="em">dispersio</span> ven del latin : esparpalhar, espanar. En l'usatge roman aviá pas de connotacion negativa. Esparpalhar èra pas una pèrda. Èra una distribucion.</p>
+<p>En criptografia, la dispersión d'informacion es una tecnica precisa. Un messatge <span class="strong">M</span> es encodificat en <span class="strong">n</span> fragments. Tot <span class="strong">k</span> d'aqueles fragments — ont k es mai pichòt que n — son susfisents per reconstruir M exactament.</p>
+${makeDiagram({msg:'M',encode:'encodificar',fragments:'fragments',any:'qualque',of:'de',reconstruct:'reconstruir',caption:'Figura 1 — Algoritme de Dispersión d\'Informacion (IDA). [Rabin, 1989]'})}
+<div class="pull">L'algoritme distribuit foguèt pas inventat perque la descentralizacion es a la mòda. Foguèt inventat perque la centralizacion es perillosa — e lo perilh es structural, pas accidental.</div>`,
+  s3_label: 'D\'ont ven',
+  s3: `<p>Lo fondament formal es l'article de Michael O. Rabin de 1989. Rabin mostret que tot messatge podiá èsser dividit en fragments de tala manièra que la relacion entre fragments e original siá matematicament exacta.</p>
+<p>L'article d'Adi Shamir de 1979 introduguèt lo partatge de secrets via l'interpolacion polinomiala sus los còsses finits. Ambes descrion sistèmas de seuil ont k partidas — e solament k partidas — pòdon reconstruir un secret.</p>`,
+  s4_label: 'La conexion amb Hawking',
+  s4: `<p>Los articles de Stephen Hawking de 1974 e 1975 descriviron un mecanisme per lo qual los trons negres emeton una radiation. Los efèctes quantics pròches de l'orizont produison de parelhs de particulas : un es capturat, un s'escapa.</p>
+<div class="pull">L'informacion dispareis pas. Se dispersa. Aquò es lo principi que liga la radiation de Hawking a la dispersión criptografica — pas solament coma metafòra, mas coma afirmacion estructurala sus çò qu'es l'informacion e coma se comporta.</div>`,
+  s5_label: 'Ont es utilizat',
+  s5: `<p><span class="strong">Estocatge distribuit.</span> Sistèmas coma IPFS utilizan l'encodificacion d'efaçament per garantir qu'un servidor unic aja jamai un fichièr complet.</p>
+<p><span class="strong">Gestion de claus.</span> Los modules de seguretat de material en banca utilizan sovent lo partatge de secrets de Shamir per distribuir la clau maestra entre mantuns gardians.</p>
+${makeDispersioFig({centralised:'centralizat',distributed:'distribuit',server:'SERVIDOR',singlept:'punt unic',danger:'punt unic de fracàs',resilient:'cap punt unic de fracàs',caption2:'Figura 2 — Arquitectura centralizada vs. dispersada.'})}`,
+  s6_label: 'Una nòta sus la lenga',
+  s6: `<p>Aquesta plataforma es disponibla en vint-e-dos lengas. Aqueste nombre foguèt pas causissut per cobrir-las totas. Foguèt causissut en seguissent l'origina dels mots.</p>
+<p>Lo mot <span class="em">cifra</span> intrèt dins las lengas europèas via l'arabi (<span class="em">ṣifr</span>), qu'el meteis ven del sanskrit (<span class="em">śūnya</span>) : lo vuege, lo zèro.</p>
+<div class="pull">Aquò es pas una posicion politica. Es una posicion personala. Son lengas en las qualas ai de rasons personalas per far confiança. La seleccion reflectís aquela confiança — res mai, e res mens.</div>`,
+  s8_label: 'L\'entorn ont aquò foguèt construit',
+  s8: `<p>La maquina d'aquesta fotografia es un ThinkPad. Una generacion de CPU mai anciana. Torna jos Linux.</p>
+<p>Aquel causissut èra pas una preferéncia. Èra una limitacion que devenguèt una conviction. Al Japon, lo mercat de material gran public s'es desplaçat quasi completament cap a Windows. Lo suport Linux se rétrécit d'an en an.</p>
+<div class="pull">La rason per causir Linux es pas l'ideologia. Es la confiança. Un sistèma operatiu que servís pas de publicitats. Un entorn de desvolupament ont JavaScript marcha net dempuèi la linha de commanda. Aquestas son pas de fonccionalitats de luxe. Son las condicions minimas per far lo trabalh.</div>
+<p>Foguèri jamai evaluat formalament pel Sindròme d'Irlen. Lo voliái. Al Japon, lo camin cap a l'evaluacion requerís un diagnostic prealable de disabilitacion del desvolupament. Lo Sindròme d'Irlen es pas reconegut coma independent.</p>
+<p>Gèri aquò sens diagnostic formal dempuèi mai de quinze ans. Aquò es pas una acreditacion. Es una rason.</p>`,
+  s7_label: 'Referéncias',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── BR ────────────────────────────────────────────────────────────────
+CONTENT['br'] = {
+  s1_label: 'Petra eo se',
+  s1: `<p>Ar skrid-mañ a zo evit ur abeg hepken : ober un tamm eus ur mennozh diez.</p>
+<p>Al algoritmoù dispersión kryptografek — hag ar reizhiadoù ranniet a ra posupl — n'int ket intuitivel. N'int ket bet savet evel-se. Dont a reont eus ur souci istorel spesial : petra a c'hoarvez pa vez ur poent kontrollerezh unan hepken ur poent fall, pe gwazoc'h, ur poent galloud.</p>
+<div class="pull">Ar skrid-mañ n'eo ket ul levr skolaj. Ur map kizidik eo — eus ar mennozh d'an diagram d'ar c'hod — skrivet evit skolidi eil-derez ha studierien a fell dezho kompren, n'int ket just implijout.</div>`,
+  s2_label: 'Ar mennozh kreiz : ar skarladenn',
+  s2: `<p>Ar ger <span class="em">dispersio</span> a zeu eus al latin : skarlan, ledan. Er Latin ne oa ket ur c'hounnar fall. Skarlan n'eo ket kollet. Rannañ eo.</p>
+<p>Er kryptografi, skarladenn titouroù a zo ur zegmeg spis. Ur gemennad <span class="strong">M</span> a zo kodañ e <span class="strong">n</span> tammoù. Pep <span class="strong">k</span> eus ar re-mañ — ma n'eo ket k brasoc'h eget n — a zo awalc'h evit adkas M ent skwer.</p>
+${makeDiagram({msg:'M',encode:'kodañ',fragments:'tammoù',any:'pep',of:'eus',reconstruct:'adkas',caption:'Skeudenn 1 — Algoritm Skarladenn Titouroù (IDA). [Rabin, 1989]'})}
+<div class="pull">N'eo ket bet dizoret an algoritm ranniet abalamour ma vez modekaet an disentralañ. Bet eo dizoret abalamour ma zo danjerus an entralañ — hag ar c'hounnar a zo steuñvel, n'eo ket dre zegouezh.</div>`,
+  s3_label: 'Eus pelec\'h e teu',
+  s3: `<p>Ar sav-tir furch eo paper Michael O. Rabin eus 1989. Rabin a diskouezas e c'haller rannañ pep gemennad e tammoù evel-se ma vo an darempred etre tammoù hag orin matematikel skwer.</p>
+<p>Paper Adi Shamir eus 1979 a gas en-dro rannañ sekredoù dre interpolasion polinom war maezioù fin. An daou a deskrev reizhiadoù treuzoù ma c'haller gant k partienn — hag k partienn hepken — adkas ur sekred.</p>`,
+  s4_label: 'Liamm Hawking',
+  s4: `<p>Paperioù Stephen Hawking eus 1974 ha 1975 a deskrivjont ur mekanizm dre m\'emañ touelloù du o tiorren skourradenn. Efedoù kuantum tost ouzh an orizo a brod pareoù partikl : unan a zo kempet, unan all a zeu kuit.</p>
+<div class="pull">Titouroù n'int ket o chom kuzhet. O skarlan int. Setu ar brezeg a liamm skourradenn Hawking ouzh skarladenn kryptografek — n'eo ket ur simildur hepken, met ur ger steuñvel war petra eo titouroù ha penaos int o em ziskouez.</div>`,
+  s5_label: 'Pelec\'h e vez implijet',
+  s5: `<p><span class="strong">Stokaj ranniet.</span> Reizhiadoù evel IPFS a implij kodañ diverkañ — tost d'an IDA — evit gwiriañ n'en devo ket ur servijer unan hepken ur restr leun.</p>
+<p><span class="strong">Merañ alc'hwezioù.</span> Moduloù surentez meziantel e bankioù a implij alies rannañ sekredoù Shamir evit rannañ an alc'hwez pennañ etre meur a wadour.</p>
+${makeDispersioFig({centralised:'entralañ',distributed:'ranniet',server:'SERVIJER',singlept:'poent unan',danger:'poent fall unan',resilient:'poent fall ebet',caption2:'Skeudenn 2 — Steuñvadur entralañ vs ranniet.'})}`,
+  s6_label: 'Ur notenn war ar yezh',
+  s6: `<p>Ar prenestr-mañ a zo hegerz e daou-ha-ugent yezh. N'eo ket bet diuzet an niver-se evit bezañ leun. Bet eo diuzet dre heuliañ tarzh ar gerioù.</p>
+<p>Ar ger <span class="em">cifra</span> — niver kuzh — a zo deut e yezhoù Europa dre Arabeg (<span class="em">ṣifr</span>), deut e-unan eus Sanskrit (<span class="em">śūnya</span>) : ar goullo, ar zero.</p>
+<div class="pull">N'eo ket ur stad politikel. Ur stad personel eo. Yezhoù int ma'm eus abegioù personel evit fiziout ennezho. An diuz a ziskouez ar fiziadur-se — netra ouzhpenn, ha netra bihanoc'h.</div>`,
+  s8_label: 'Ar c\'headur ma voe savet se',
+  s8: `<p>Ar meziant er skeudenn-mañ a zo ur ThinkPad. Ur c\'henredad CPU kozh. O redeg dindan Linux.</p>
+<p>N\'eo ket bet ur gwellout ar reizh-se. Ur bevennadur a voe a ziskas ur skiant. Er Japan, ar marc\'had meziantel evit an holl a zo aet eus nebeutoc\'h war Windows. Ar skoazell Linux a zo bet berekaet bloaz goude bloaz.</p>
+<div class="pull">An abeg evit diuz Linux n\'eo ket an ideologiezh. Ar fiziadur eo. Ur reizhiad labour n\'eus ket o servijout bruderezh. Ur c\'headur diorren ma vez JavaScript o redeg sklear eus ar linenn urzhiataer. N\'int ket arloù a vrud. Ar modaliou izañ int evit ober al labour.</div>
+<p>Biken ne voen evaluet ent ofisiel evit Sindromed Irlen. Me a faote. Er Japan, an hent d\'an evaluasion a c\'houlenn ur diagnozeg araok eus ur boaniadur diorren. N\'eo ket anavezet Sindromed Irlen evel a-sav.</p>
+<p>Me a zo o merañ se hep diagnozeg ofisiel abaoe muioc\'h eget pemzek vloaz. N\'eo ket ur testamant. Ur abeg eo.</p>`,
+  s7_label: 'Daveennoù',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── CO ────────────────────────────────────────────────────────────────
+CONTENT['co'] = {
+  s1_label: 'Chì hè questu',
+  s1: `<p>Stu documentu esiste per una sola ragione : rende accessible un'idea difficiule.</p>
+<p>L'algoritmi di dispersione criptografica — è i sistemi distribuiti chì rendenu pussibule — ùn sò micca intuitivi. Ùn sò statu cuncepiti per esse cusì. Sò emèrsi da una preuccupazione storica precisa : chì succede quandu un puntu unicu di cuntrollu diventa un puntu unicu di falla, o peghju, un puntu unicu di putere.</p>
+<div class="pull">Stu ùn hè micca un libru di testu. Hè una mappa guidata — da u cuncettu à u diagramma à u codice — scritta per i studenti di u liceu è di l'università chì volenu capisce, micca solu aduprà.</div>`,
+  s2_label: 'L\'idea centrale : a dispersione',
+  s2: `<p>A parolla <span class="em">dispersio</span> vene da u latinu : sparghjite, sparse. Ind'u usu rumanu ùn avia micca connotazione negativa. Sparghje ùn era micca perde. Era distribuisce.</p>
+<p>In criptografia, a dispersione d'infurmazione hè una tecnica precisa. Un messagiu <span class="strong">M</span> hè codificatu in <span class="strong">n</span> frammenti. Qualsiasi <span class="strong">k</span> di sti frammenti — induve k hè più chjucu di n — sò sufficienti per ricustruisce M esattamente.</p>
+${makeDiagram({msg:'M',encode:'codificà',fragments:'frammenti',any:'qualsiasi',of:'di',reconstruct:'ricustruisce',caption:'Figura 1 — Algoritmu di Dispersione d\'Infurmazione (IDA). [Rabin, 1989]'})}
+<div class="pull">L'algoritmu distribuitu ùn hè micca statu inventatu perchè a decentralizazione hè à a moda. Hè statu inventatu perchè a centralizzazione hè periculosa — è u periculu hè strutturale, micca accidentale.</div>`,
+  s3_label: 'Induv\'ellu vene',
+  s3: `<p>U fundamenetu formale hè l'articulu di Michael O. Rabin di u 1989. Rabin hà dimustratu chì qualsiasi messagiu pò esse divisu in frammenti in manera tale chì a relazione frà frammenti è originale sia matematicamente esatta.</p>
+<p>L'articulu di Adi Shamir di u 1979 hà introduttu a condivisione di sicreti attraversu l'interpolazione polinomiale sopra i campi finiti. Tutti dui decrivenu sistemi di soglia induve k parti — è solu k parti — ponu ricustruisce un segretu.</p>`,
+  s4_label: 'U ligame cù Hawking',
+  s4: `<p>L'articuli di Stephen Hawking di u 1974 è u 1975 descrissenu un mecanismu per u quale i buchi neri emettenu radiazione. L'effetti quantistici vicinu à l'orizonte pruducenu coppie di particule : una hè catturata, una scappa.</p>
+<div class="pull">L'infurmazione ùn scompare micca. Si disperde. Hè u principiu chì lega a radiazione di Hawking à a dispersione criptografica — micca solu cum'è metafora, ma cum'è affirmazione strutturale nant'à ciò chì hè l'infurmazione è cumu si cumporta.</div>`,
+  s5_label: 'Induv\'hè aduprata',
+  s5: `<p><span class="strong">Archiviazione distribuita.</span> I sistemi cum'è IPFS aduprani a codifica di cancellazione per garantisce chì nisun servore unicu detene un schedariu cumplettu.</p>
+<p><span class="strong">Gestione di chjave.</span> I moduli di sicurezza hardware in e banche aduprani spessu a condivisione di sicreti di Shamir per distribuisce a chjave principale trà parechji custodi.</p>
+${makeDispersioFig({centralised:'centralizzatu',distributed:'distribuitu',server:'SERVORE',singlept:'puntu unicu',danger:'puntu unicu di falla',resilient:'nisun puntu unicu di falla',caption2:'Figura 2 — Architettura centralizzata vs. dispersa.'})}`,
+  s6_label: 'Una nota nantu à a lingua',
+  s6: `<p>Sta piattaforma hè dispunibile in ventidue lingue. Stu numeru ùn hè micca statu sceltu per a copertura. Hè statu sceltu seguendu l'urigine di e parole.</p>
+<p>A parolla <span class="em">cifra</span> hè entrata in e lingue europee attraversu l'arabu (<span class="em">ṣifr</span>), chì stessu vene da u sanscrito (<span class="em">śūnya</span>) : u vuotu, u zero.</p>
+<div class="pull">Stu ùn hè micca una pusizione pulitica. Hè una pusizione persunale. Sò lingue in e quale aghju ragioni persunali per fidà. A selezzione riflette sta fiducia — nunda di più, è nunda di menu.</div>`,
+  s8_label: "L'ambiante induve questu hè statu custruitu",
+  s8: `<p>A machina in sta fotografia hè un ThinkPad. Una generazione di CPU più vecchia. Gira sottu Linux.</p>
+<p>Quella scelta ùn era micca una preferenza. Era una limitazione chì hè diventata una cunvinzione. In Giappone, u mercatu di hardware per i cunsumatori si hè mossu quasi interamente versu Windows. U supportu Linux hè calatu annu dopu annu.</p>
+<div class="pull">A ragione per scegliere Linux ùn hè micca l'ideologia. Hè a fiducia. Un sistema operativu chì ùn serve micca publicità. Un ambiante di sviluppu induve JavaScript gira pulitu da a linea di cumanda. Sti ùn sò micca funziunalità di lussu. Sò e cundizioni minime per fà u travagliu.</div>
+<p>Ùn sò statu mai valutatu formalmente per a Sindrome di Irlen. U vulia esse. In Giappone, u percorsu versu a valutazione richiede una diagnosi precedente di disabilità di sviluppu. A Sindrome di Irlen ùn hè micca ricunisciuta cum'è indipendente.</p>
+<p>Aghju gestitu questu senza diagnosi formale per più di quindici anni. Stu ùn hè micca una credenziale. Hè una ragione.</p>`,
+  s7_label: 'Riferimenti',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── RM ────────────────────────────────────────────────────────────────
+CONTENT['rm'] = {
+  s1_label: 'Tge che quai è',
+  s1: `<p>Quest document exista per ina sola raschun: render accessibla ina idea difficila.</p>
+<p>Ils algoritmus da dispersiun criptografica — ed ils sistems distribuids ch'els rend pussaivel — na sun betg intuitivi. Els n'èn betg vegnids concepids per esser uschia. Els sun surgnids dad ina preoccupaziun istorica concreta: tge che succeda sch'in punct da controlla singul daventa in punct da falla singul, u pli pauc, in punct da pussanza singul.</p>
+<div class="pull">Quai n'è betg in cudisch scolastic. Quai è ina carta guidada — dal concept al diagram al code — scritta per students da scola media ed universitad che vul chapir, betg mo utilisar.</div>`,
+  s2_label: 'L\'idea centrala: la dispersiun',
+  s2: `<p>La palabra <span class="em">dispersio</span> vegn dal latin: spargear, sparpaliar. En l'utilisaziun romana ella n'aveva nagina connotaziun negativa. Spargear n'era betg perder. Era distribuir.</p>
+<p>En criptografia, la dispersiun d'infurmaziun è ina tecnica precisa. In messadi <span class="strong">M</span> vegn codifitgà en <span class="strong">n</span> fragments. Mintgin <span class="strong">k</span> da quests fragments — nua che k è pli pitschen che n — è sufficient per reconstruir M exactamain.</p>
+${makeDiagram({msg:'M',encode:'codifitgar',fragments:'fragments',any:'mintgin',of:'da',reconstruct:'reconstruir',caption:'Figura 1 — Algoritmus da Dispersiun d\'Infurmaziun (IDA). [Rabin, 1989]'})}
+<div class="pull">L'algoritmus distribuì n'è betg vegnì inventà perquai che la decentralisaziun è a la moda. El è vegnì inventà perquai che la centralisaziun è dangeriusa — ed il privel è structural, betg accidental.</div>`,
+  s3_label: 'Dad nua ch\'el vegn',
+  s3: `<p>Il fundament formal è l'artitgel da Michael O. Rabin da 1989. Rabin ha mussà ch'in mintga messadi po vegnir dividì en fragments en maniera ch'il rapport tranter fragments ed original saja matematicamain exact.</p>
+<p>L'artitgel d'Adi Shamir da 1979 ha introducì la participaziun da secrets via interpolaziun polinomial sur champs finits. Omadus descriveschan sistems da soglia nua che k partidas — e mo k partidas — pon reconstruir in secret.</p>`,
+  s4_label: 'La colliaziun cun Hawking',
+  s4: `<p>Ils artitgels da Stephen Hawking da 1974 e 1975 han descrit in mecanissem cun il qual ils pertgis nairs emetteschan radiaziun. Effects quantistics vischins a l'orizont produceschan pairs da particlas: ina vegn catschada, ina s'evada.</p>
+<div class="pull">L'infurmaziun na svanischa betg. Ella sa dispera. Quai è il principi che colliescha la radiaziun da Hawking cun la dispersiun criptografica — betg mo sco metafra, mabain sco affirmaziun structurala davart tge che l'infurmaziun è e co ella sa cumporta.</div>`,
+  s5_label: 'Nua ch\'el vegn utilisà',
+  s5: `<p><span class="strong">Archiviaziun distribuida.</span> Sistems sco IPFS utiliseschan la codificaziun da stritgar — in parent stretg dal IDA — per guarantir che nagin server singul detegna in datoteca cumpletta.</p>
+<p><span class="strong">Gestiun da clavs.</span> Modules da segirezza hardware en bancas utiliseschan savens la participaziun da secrets da Shamir per distribuir la clav principala tranter plirs custodins.</p>
+${makeDispersioFig({centralised:'centralisà',distributed:'distribuì',server:'SERVER',singlept:'punct singul',danger:'punct singul da falla',resilient:'nagin punct singul da falla',caption2:'Figura 2 — Architectura centralisada vs. dispersa.'})}`,
+  s6_label: 'Ina remarca davart la lingua',
+  s6: `<p>Quest platform è disponibel en dudesch e ventg linguas. Quel numer n'è betg vegnì tschernì per la cumpletezza. El è vegnì tschernì suandond l'origin da las palabras.</p>
+<p>La palabra <span class="em">cifra</span> è entrada en las linguas europeas tras l'arab (<span class="em">ṣifr</span>), che el sez vegn dal sanskrit (<span class="em">śūnya</span>): il void, il nul.</p>
+<div class="pull">Quai n'è betg ina posiziun politica. Quai è ina posiziun personala. Quai sun linguas en las qualas hai raschuns persunalas da far confienza. La selecziun reflectescha questa confienza — nagut dapli, e nagut damain.</div>`,
+  s8_label: 'L\'ambient en il qual quai è vegnì construì',
+  s8: `<p>La maschina en questa fotografia è in ThinkPad. Ina generaziun da CPU pli veglia. El gira sut Linux.</p>
+<p>Quella tscherna n'era betg ina preferenza. Era ina limitaziun che è davantada ina convincziun. En il Giapun, il martgà da hardware per consuments s'è mussà quasi cumpletamain vers Windows. Il sustegn da Linux è vegnì reducì onn suenter onn.</p>
+<div class="pull">La raschun per tscherner Linux n'è betg l'ideologia. Quai è la confidenza. In sistem operativ che na servischa betg reclamas. In ambient da svilup nua che JavaScript gira nettamain da la lingia da comonda. Quellas na sun betg funcziuns da luxus. Ellas sun las condiziuns minimalas per far il lavur.</div>
+<p>Na sun betg mai vegnì evaluà formalamain per la Sindrome d'Irlen. Vuless esser stà. En il Giapun, la via vers la evaluaziun pretenda ina diagnosa precedenta d'ina disabilitad da svilup. La Sindrome d'Irlen n'è betg reconuschida sco independenta.</p>
+<p>Hai gestì quai senza diagnosa formala per dapli che quindesch onns. Quai n'è betg ina credenzial. Quai è ina raschun.</p>`,
+  s7_label: 'Referenzas',
+  s7: `<div class="ref"><span class="ref-num">[1]</span><span>Rabin, M.O. (1989). Efficient dispersal of information. <em>Journal of the ACM</em>, 36(2), 335–348.</span></div>
+<div class="ref"><span class="ref-num">[2]</span><span>Shamir, A. (1979). How to share a secret. <em>Communications of the ACM</em>, 22(11), 612–613.</span></div>
+<div class="ref"><span class="ref-num">[3]</span><span>Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</span></div>`,
+};
+
+// ── FR-BE ─────────────────────────────────────────────────────────────
+CONTENT['fr-BE'] = {
+  s1_label: 'Ce que c\'est',
+  s1: `<p>Ce document existe pour une seule raison : rendre une idée difficile accessible.</p>
+<p>Les algorithmes de dispersion cryptographique — et les systèmes distribués qu'ils rendent possibles — ne sont pas intuitifs. Ils n'ont pas été conçus pour l'être. Ils ont émergé d'une préoccupation historique précise : qu'est-ce qui se passe quand un point de contrôle unique devient un point de défaillance unique, ou pire, un point de pouvoir unique.</p>
+<p>Cette préoccupation n'est pas abstraite. Elle a des conséquences. Et la plupart de la génération qui vivra avec ces conséquences n'a jamais reçu d'explication claire sur l'origine de ces algorithmes, ce qu'ils font, ou pourquoi les mathématiques qui les sous-tendent importent.</p>
+<div class="pull">Ce n'est pas un syllabus. C'est une carte guidée — du concept au diagramme au code — écrite pour des élèves du secondaire et de l'enseignement supérieur qui veulent comprendre, pas uniquement utiliser.</div>
+<p>Les références en fin de document sont réelles. Les explications sont honnêtes. Les diagrammes sont là parce qu'un concept sans forme est plus difficile à saisir.</p>`,
+  s2_label: 'L\'idée centrale : la dispersion',
+  s2: CONTENT['fr'].s2,
+  s3_label: 'D\'où ça vient',
+  s3: `<p>Le fondement formel est l'article de Michael O. Rabin de 1989, paru dans le Journal of the ACM. Rabin a montré que tout message peut être divisé en fragments de telle sorte que la relation entre les fragments et l'original est mathématiquement exacte — pas approximative, pas avec perte.</p>
+<p>En parallèle, l'article d'Adi Shamir de 1979 a introduit le partage de secret par interpolation polynomiale sur des corps finis. Les deux décrivent des systèmes à seuil où k parties — et seulement k parties — peuvent reconstruire un secret.</p>
+<div class="pull">L'algorithme distribué n'a pas été inventé parce que la décentralisation est à la mode. Il a été inventé parce que la centralisation est dangereuse — et le danger est structurel, pas accidentel.</div>`,
+  s4_label: 'Le lien avec Hawking',
+  s4: CONTENT['fr'].s4,
+  s5_label: 'Où c\'est utilisé',
+  s5: `<p>La dispersion et la cryptographie à seuil apparaissent dans plus d'endroits que la plupart des étudiants ne le réalisent.</p>
+<p><span class="strong">Stockage distribué.</span> Des systèmes comme IPFS utilisent un codage d'effacement pour s'assurer qu'aucun serveur unique ne détient un fichier complet.</p>
+<p><span class="strong">Gestion des clés.</span> Les modules de sécurité matériels dans les banques et institutions publiques belges utilisent souvent le partage de secret de Shamir pour distribuer la clé maîtresse entre plusieurs dépositaires. Aucune personne seule ne peut accéder à la clé.</p>
+<p><span class="strong">Blockchain et registres distribués.</span> Les mécanismes de consensus reposent sur des hypothèses de seuil : k validateurs sur n doivent s'accorder avant qu'une transaction soit confirmée.</p>
+${makeDiagram({msg:'M',encode:'encoder',fragments:'fragments',any:'n\'importe quels',of:'sur',reconstruct:'reconstruire',caption:'Figure 1 — Algorithme de dispersion d\'information (IDA). [Rabin, 1989]'})}`,
+  s6_label: 'Une note sur la langue',
+  s6: `<p>En Belgique, la question de la langue n'est jamais neutre. On grandit ici avec l'idée que deux communautés peuvent partager un territoire sans partager les mots — et que cette coexistence demande une attention constante, pas une évidence.</p>
+<p>Ce projet est disponible en vingt-deux langues. Parmi elles : le luxembourgeois, le breton, l'occitan, le basque, le catalan, le romanche — des langues qui ne sont pas les langues officielles de grands États, mais qui sont les langues dans lesquelles certaines personnes pensent le plus clairement.</p>
+<p>Le mot <span class="em">cifra</span> est entré dans les langues européennes par l'arabe (<span class="em">ṣifr</span>), lui-même venu du sanskrit (<span class="em">śūnya</span>) : le vide, le zéro. Ce trajet — de la marge vers le centre, d'une langue vers vingt — est exactement ce que ce projet essaie de refaire, en sens inverse.</p>
+<div class="pull">Ce n'est pas une position politique — ni une position communautaire. Quelqu'un qui vit entre les langues sait que la langue dans laquelle on reçoit une idée change ce qu'on en retient. C'est aussi simple que ça.</div>
+<p>La bibliothèque de référence ci-dessous n'est pas décorative. Ce sont les livres depuis lesquels ce projet a été construit. L'étymologie d'abord. La syntaxe ensuite. La physique à côté.</p>
+<div class="shelf">
+  <div class="shelf-header"><div class="shelf-header-cell">titre</div><div class="shelf-header-cell">axe linguistique</div><div class="shelf-header-cell">rôle dans ce projet</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Etymologisch Woordenboek — van Dale</div><div class="shelf-cell shelf-lang">NL / Néerlandais</div><div class="shelf-cell shelf-note">Dictionnaire étymologique néerlandais. Source pour tracer les origines de mots à travers les branches germaniques vers leurs parents des langues minoritaires.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">KLUGE Etymologisches Wörterbuch, 24. Auflage</div><div class="shelf-cell shelf-lang">DE / Allemand</div><div class="shelf-cell shelf-note">Référence étymologique allemande standard. Utilisé pour tracer cifra → Ziffer → ṣifr par la voie germanique.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">W. Meyer-Lübke — Romanisches etymologisches Wörterbuch</div><div class="shelf-cell shelf-lang">Langues romanes</div><div class="shelf-cell shelf-note">La référence canonique pour l'étymologie romane. Base du choix linguistique pour FR, ES, PT, IT, OC, CA, GL, CO, RM.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Le Petit Robert 2022</div><div class="shelf-cell shelf-lang">FR / Français</div><div class="shelf-cell shelf-note">Dictionnaire français avec étymologie. Ancre pour les variantes FR, FR-BE, FR-CH, FR-CA et leurs distinctions régionales.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">The Oxford Handbook of Comparative Syntax — Cinque & Kayne</div><div class="shelf-cell shelf-lang">Translinguistique</div><div class="shelf-cell shelf-note">Référence structurelle pour comprendre comment les concepts se traduisent — pas seulement les mots.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Linguistic Polyphony — Nølke</div><div class="shelf-cell shelf-lang">IS / Nordique</div><div class="shelf-cell shelf-note">Cadre pour comprendre comment un même énoncé porte plusieurs voix — appliqué ici à l'idée qu'une seule description d'algorithme doit parler différemment dans chaque langue.</div></div>
+  <div class="shelf-item"><div class="shelf-cell shelf-title">Stephen Hawking — A Brief History of Time</div><div class="shelf-cell shelf-lang">EN / Physique</div><div class="shelf-cell shelf-note">Le point d'entrée. Pas comme manuel de physique, mais comme démonstration que la distance entre un concept et sa compréhension peut être franchie.</div></div>
+</div>
+<div class="arlen-note">La règle de lecture colorée sur cette photographie est un outil pour le Syndrome d'Irlen — une condition visuelle qui affecte la façon dont le cerveau interprète le contraste sur une page. Elle est incluse ici comme contexte : la question de comment une personne reçoit l'information n'est pas séparée de la question de la langue dans laquelle elle arrive.</div>`,
+  s8_label: 'L\'environnement dans lequel c\'est construit',
+  s8: CONTENT['fr'].s8,
+  s7_label: 'Références',
+  s7: CONTENT['fr'].s7,
+};
+
+// ── FR-CH ─────────────────────────────────────────────────────────────
+CONTENT['fr-CH'] = {
+  s1_label: 'Ce que c\'est',
+  s1: `<p>Ce document existe pour une seule raison : rendre une idée difficile accessible.</p>
+<p>Les algorithmes de dispersion cryptographique — et les systèmes distribués qu'ils rendent possibles — ne sont pas intuitifs. Ils n'ont pas été conçus pour l'être. Ils ont émergé d'une préoccupation historique précise : que se passe-t-il lorsqu'un point de contrôle unique devient un point de défaillance unique, ou pire, un point de pouvoir unique.</p>
+<div class="pull">Ce n'est pas un manuel scolaire. C'est une carte guidée — du concept au diagramme au code — rédigée pour des élèves du gymnase et des étudiants de bachelor qui veulent comprendre, pas seulement utiliser.</div>
+<p>Les références en fin de document sont réelles. Les explications sont honnêtes. Les diagrammes sont là parce qu'un concept sans forme est plus difficile à retenir.</p>`,
+  s2_label: 'L\'idée centrale : la dispersion',
+  s2: CONTENT['fr'].s2,
+  s3_label: 'D\'où ça vient',
+  s3: CONTENT['fr'].s3,
+  s4_label: 'Le lien avec Hawking',
+  s4: CONTENT['fr'].s4,
+  s5_label: 'Où c\'est utilisé',
+  s5: `<p>La dispersion et la cryptographie à seuil apparaissent dans plus d'endroits que la plupart des étudiants ne le réalisent.</p>
+<p><span class="strong">Stockage distribué.</span> Des systèmes comme IPFS utilisent le codage d'effacement pour garantir qu'aucun serveur unique ne détient un fichier complet.</p>
+<p><span class="strong">Gestion des clés.</span> En Suisse, les modules de sécurité matériels dans le secteur bancaire et les systèmes fédéraux utilisent souvent le partage de secret de Shamir pour distribuer la clé maîtresse entre plusieurs dépositaires — une approche conforme à la tradition helvétique de contrôle réparti.</p>
+<p><span class="strong">Blockchain.</span> Les mécanismes de consensus reposent sur des hypothèses de seuil : k validateurs sur n doivent s'accorder avant qu'une transaction soit confirmée. Les mathématiques sont identiques.</p>
+${makeDispersioFig({centralised:'centralisé',distributed:'distribué',server:'SERVEUR',singlept:'point unique',danger:'point unique de défaillance',resilient:'aucun point unique de défaillance',caption2:'Figure 2 — Architecture centralisée vs. dispersée.'})}`,
+  s6_label: 'Une note sur la langue',
+  s6: `<p>La Suisse est le seul pays d'Europe où quatre langues nationales coexistent dans un même cadre constitutionnel — dont le romanche, parlé par moins de cent mille personnes, mais reconnu comme langue nationale au même titre que l'allemand et le français. Ce projet inclut le romanche. Ce n'est pas un geste symbolique.</p>
+<p>Ce projet est disponible en vingt-deux langues. Le mot <span class="em">cifra</span> est entré dans les langues européennes par l'arabe (<span class="em">ṣifr</span>), lui-même venu du sanskrit (<span class="em">śūnya</span>) : le vide, le zéro. Une idée venue de loin, passée par des langues minoritaires, qui a fini par structurer l'arithmétique entière de l'Occident. C'est exactement le trajet que ce projet essaie de documenter.</p>
+<p>Les langues ici — le breton, l'occitan, le basque, le romanche, le luxembourgeois, le catalan et d'autres — ne sont pas incluses pour leur taille. Elles sont incluses parce que comprendre est plus clair dans la langue la plus proche de soi, et que la proximité ne se mesure pas en nombre de locuteurs.</p>
+<div class="pull">Ce n'est pas une position politique — ni une position fédérale. La Confédération a ses propres raisons de protéger le plurilinguisme. Les miennes sont différentes : ce sont des langues auxquelles je fais confiance pour des raisons personnelles. La sélection reflète cette confiance — rien de plus, et rien de moins.</div>`,
+  s8_label: 'L\'environnement dans lequel c\'est construit',
+  s8: CONTENT['fr'].s8,
+  s7_label: 'Références',
+  s7: CONTENT['fr'].s7,
+};
+
+// ── FR-CA ─────────────────────────────────────────────────────────────
+CONTENT['fr-CA'] = {
+  s1_label: 'Ce que c\'est',
+  s1: `<p>Ce document existe pour une seule raison : rendre une idée difficile accessible.</p>
+<p>Les algorithmes de dispersion cryptographique — et les systèmes distribués qu'ils permettent — sont pas intuitifs. Ils ont pas été conçus pour l'être. Ils ont émergé d'une préoccupation historique précise : qu'est-ce qui arrive quand un seul point de contrôle devient un seul point de défaillance — ou pire, un seul point de pouvoir.</p>
+<p>Cette préoccupation est pas abstraite. Elle a des conséquences. Pis la plupart de la génération qui va vivre avec ces conséquences a jamais reçu d'explication claire sur d'où ces algorithmes viennent, ce qu'ils font, ou pourquoi les mathématiques en-dessous ça compte.</p>
+<div class="pull">C'est pas un manuel. C'est une carte guidée — du concept au diagramme au code — écrite pour des élèves du secondaire et des étudiant·es du cégep et de l'université qui veulent comprendre, pas juste utiliser.</div>
+<p>Les références à la fin sont vraies. Les explications sont honnêtes. Les diagrammes sont là parce qu'un concept sans forme, c'est plus difficile à tenir.</p>`,
+  s2_label: 'L\'idée centrale : la dispersion',
+  s2: `<p>Le mot <span class="em">dispersio</span> vient du latin : éparpiller, répandre. Dans l'usage romain, il avait pas de connotation négative. Éparpiller c'était pas perdre. C'était distribuer.</p>
+<p>En cryptographie, la dispersion d'information c'est une technique précise. Un message <span class="strong">M</span> est encodé en <span class="strong">n</span> fragments. N'importe quels <span class="strong">k</span> de ces fragments — où k est plus petit que n — suffisent pour reconstruire M exactement. Aucun ensemble de moins de k fragments révèle quoi que ce soit d'utile sur M.</p>
+${makeDiagram({msg:'M',encode:'encoder',fragments:'fragments',any:'n\'importe quels',of:'sur',reconstruct:'reconstruire',caption:'Figure 1 — Algorithme de dispersion d\'information (IDA). M est le message original. n fragments sont produits. N\'importe quels k reconstruisent M exactement. Moins de k révèlent rien. [Rabin, 1989]'})}
+<p>C'est pas la même chose que le chiffrement seul. Le chiffrement cache le contenu. La dispersion élimine le besoin d'un seul détenteur de l'information complète.</p>
+<p>La question à laquelle la dispersion répond : <span class="em">pis si l'endroit qui garde le secret disparaît, se fait saisir, ou tombe en panne ?</span> La réponse : si aucun endroit unique détient le secret complet, aucun de ces événements peut le détruire.</p>`,
+  s3_label: 'D\'où ça vient',
+  s3: `<p>Le fondement formel c'est l'article de Michael O. Rabin de 1989, publié dans le Journal of the ACM. Rabin a montré que tout message peut être divisé en fragments de façon à ce que la relation entre les fragments et l'original soit mathématiquement exacte — pas approximative, pas avec perte.</p>
+<p>En parallèle, l'article d'Adi Shamir de 1979 a introduit le partage de secret par interpolation polynomiale sur des corps finis. Les deux schémas décrivent des systèmes à seuil où k parties — et seulement k parties — peuvent reconstruire un secret.</p>
+<div class="pull">L'algorithme distribué a pas été inventé parce que la décentralisation est à la mode. Il a été inventé parce que la centralisation est dangereuse — et le danger est structurel, pas accidentel.</div>`,
+  s4_label: 'Le lien avec Hawking',
+  s4: `<p>Cette plateforme établit une analogie délibérée entre le rayonnement de Hawking et la dispersion d'information.</p>
+<p>Les articles de Stephen Hawking de 1974 et 1975 ont décrit un mécanisme par lequel les trous noirs émettent un rayonnement. Les effets quantiques près de l'horizon produisent des paires de particules : une est capturée, l'autre s'échappe. Avec le temps, le trou noir perd de la masse et finit par s'évaporer.</p>
+<p>La question pas résolue que ça soulève c'est le paradoxe de la perte d'information : si un trou noir s'évapore complètement, est-ce que l'information a été détruite ? La plupart des physiciens croient maintenant que non — que l'information est préservée, mais dispersée à travers le rayonnement sous une forme pratiquement irrécupérable.</p>
+<div class="pull">L'information disparaît pas. Elle se disperse. C'est le principe qui relie le rayonnement de Hawking à la dispersion cryptographique — pas juste comme métaphore, mais comme affirmation structurelle sur ce qu'est l'information et comment elle se comporte.</div>`,
+  s5_label: 'Où c\'est utilisé',
+  s5: `<p>La dispersion et la cryptographie à seuil apparaissent dans plus d'endroits que la plupart des étudiant·es réalisent.</p>
+<p><span class="strong">Stockage distribué.</span> Des systèmes comme IPFS utilisent un codage d'effacement pour s'assurer qu'aucun serveur unique détient un fichier complet.</p>
+<p><span class="strong">Gestion des clés.</span> Les modules de sécurité matériels dans les banques utilisent souvent le partage de secret de Shamir pour distribuer la clé maîtresse entre plusieurs dépositaires.</p>
+<p><span class="strong">Chaînes de blocs.</span> Les mécanismes de consensus reposent sur des hypothèses de seuil : k validateurs sur n doivent s'accorder avant qu'une transaction soit confirmée.</p>
+${makeDispersioFig({centralised:'centralisé',distributed:'distribué',server:'SERVEUR',singlept:'point unique',danger:'point unique de défaillance',resilient:'aucun point unique de défaillance',caption2:'Figure 2 — Architecture centralisée vs. dispersée.'})}`,
+  s6_label: 'Une note sur la langue',
+  s6: `<p>Cette plateforme est disponible en vingt-deux langues. Ce nombre a pas été choisi pour la couverture. Il a été choisi en suivant l'origine des mots.</p>
+<p>Le mot <span class="em">cifra</span> est entré dans les langues européennes par l'arabe (<span class="em">ṣifr</span>), lui-même venu du sanskrit (<span class="em">śūnya</span>) : le vide, le zéro. Le Québec connaît ça — défendre une langue dans un continent qui la presse de tous côtés, c'est pas une question abstraite.</p>
+<p>Les langues ici — le breton, l'occitan, le basque, le romanche, le luxembourgeois, le catalan, pis d'autres — sont pas incluses parce qu'elles ont de grandes populations de locuteurs. Elles sont incluses parce que comprendre c'est toujours plus clair dans la langue la plus proche de soi. Moins il y a de gens qui ont accès au savoir dans leur propre langue, plus c'est important de le fournir.</p>
+<div class="pull">C'est pas une position politique. C'est une position personnelle. La langue qu'on parle change ce qu'on peut tenir. Ce sont des langues en lesquelles j'ai des raisons personnelles de faire confiance. La sélection reflète cette confiance — rien de plus, pis rien de moins.</div>`,
+  s8_label: 'L\'environnement dans lequel c\'est construit',
+  s8: `<p>La machine sur cette photo c'est un ThinkPad. Une génération de processeur plus vieille. Il tourne sous Linux.</p>
+<p>Ce choix était pas une préférence. C'était une contrainte devenue conviction.</p>
+<p>Au Japon, le marché du matériel grand public s'est déplacé presque complètement vers Windows. Les machines avec SSD, capables de GPU, pensées pour le développement moderne — elles existent, mais elles viennent avec Windows, parce que c'est ce que le marché demande. Le support Linux s'est rétréci année après année. La culture HDD a persisté ici plus longtemps qu'ailleurs. Les machines qui autorisent une vraie compatibilité Linux, une configuration de démarrage accessible, de la RAM et du stockage remplaçables sans se battre contre le système — ces machines deviennent de plus en plus rares.</p>
+<p>Ce ThinkPad est d'occasion. Le SSD a été remplacé. La RAM a été augmentée. C'est des choses que cette machine permet, que la plupart du matériel japonais actuel permet pas.</p>
+<div class="pull">La raison de choisir Linux c'est pas l'idéologie. C'est la confiance. Un système d'exploitation qui sert pas de pubs. Un environnement de développement où JavaScript fonctionne proprement depuis la ligne de commande. Un terminal qui se comporte comme un terminal devrait se comporter. C'est pas des fonctionnalités de luxe. C'est les conditions minimales pour faire le travail.</div>
+<p>Construire cifra/dispersio — les visualisations, le moteur de graphe, l'éditeur, le système en vingt-deux langues — a été fait sur cette machine, dans cet environnement, sous ces contraintes. Elle a atteint la limite de ce que le matériel peut supporter. C'est pas une plainte. C'est un enregistrement.</p>
+<p>J'ai jamais été évalué formellement pour le Syndrome d'Irlen. Je l'aurais voulu. Au Japon, le chemin vers l'évaluation exige un diagnostic préalable de handicap développemental. Le Syndrome d'Irlen est pas reconnu comme indépendant. Pour obtenir l'évaluation, faut d'abord accepter une étiquette qui colle peut-être pas.</p>
+<p>Je gère ça sans diagnostic formel depuis plus de quinze ans. La règle de lecture c'est pas une prescription. C'est quelque chose que j'ai trouvé qui fonctionnait, et que j'ai gardé.</p>
+<div class="pull">Le stress visuel de travailler dans un environnement mal adapté — contraste incorrect, paramètres d'affichage pas supportés, la friction accumulée d'un écran qui tient pas compte de comment la lumière arrive — est pas séparé de la difficulté de construire ça. Ça en fait partie. C'est à quoi ressemble l'environnement de l'intérieur.</div>
+<p>Je sais pas quelle est la bonne réponse. Ce que je peux dire, c'est que cette plateforme — les langues, les diagrammes, le soin apporté à rendre l'interface lisible — vient d'une personne qui sait ce que ça coûte quand l'information est pas adaptée à la personne qui la reçoit.</p>
+<p>C'est pas une accréditation. C'est une raison.</p>`,
+  s7_label: 'Références',
+  s7: CONTENT['fr'].s7,
+};
+
+// ── DE-AT ─────────────────────────────────────────────────────────────
+CONTENT['de-AT'] = {
+  s1_label: 'Was das ist',
+  s1: `<p>Dieses Dokument gibt es aus einem einzigen Grund: eine schwierige Idee zugänglich zu machen.</p>
+<p>Kryptografische Dispersionsalgorithmen — und die verteilten Systeme, die sie ermöglichen — sind nicht intuitiv. Sie wurden nicht so entworfen. Sie entstanden aus einer konkreten historischen Sorge: Was passiert, wenn ein einziger Kontrollpunkt zu einem einzigen Ausfallspunkt wird — oder schlimmer noch, zu einem einzigen Machtpunkt.</p>
+<p>Diese Sorge ist nicht abstrakt. Sie hat Konsequenzen. Und die meisten jener Generation, die mit diesen Konsequenzen leben wird, hat nie eine klare Erklärung bekommen, woher diese Algorithmen kommen, was sie tun oder warum die Mathematik dahinter wichtig ist.</p>
+<div class="pull">Das hier ist kein Lehrbuch. Es ist eine geführte Karte — vom Konzept über das Diagramm bis zum Code — geschrieben für Schülerinnen und Schüler der Unterstufe und Oberstufe, Maturantinnen und Maturanten sowie Studierende, die verstehen wollen, nicht nur anwenden.</div>
+<p>Die Verweise am Ende sind echt. Die Erklärungen sind ehrlich. Die Diagramme sind da, weil ein Konzept ohne Form schwerer zu fassen ist.</p>`,
+  s2_label: 'Die zentrale Idee: Dispersion',
+  s2: CONTENT['de'].s2,
+  s3_label: 'Woher es kommt',
+  s3: `<p>Das formale Fundament ist Michael O. Rabins Artikel von 1989, veröffentlicht im Journal of the ACM. Rabin zeigte, dass jede Nachricht so in Fragmente aufgeteilt werden kann, dass die Beziehung zwischen Fragmenten und Original mathematisch exakt ist.</p>
+<p>Daneben führte Adi Shamirs Artikel von 1979 die Geheimnisteilung durch polynomiale Interpolation über endlichen Körpern ein. Beide beschreiben Schwellwertsysteme, bei denen k Parteien — und nur k Parteien — ein Geheimnis rekonstruieren können.</p>
+<div class="pull">Der verteilte Algorithmus wurde nicht erfunden, weil Dezentralisierung modern ist. Er wurde erfunden, weil Zentralisierung gefährlich ist — und die Gefahr ist strukturell, nicht zufällig.</div>`,
+  s4_label: 'Die Hawking-Verbindung',
+  s4: CONTENT['de'].s4,
+  s5_label: 'Wo es eingesetzt wird',
+  s5: `<p>Dispersion und Schwellwertkryptografie finden sich an mehr Orten, als die meisten Studierenden ahnen.</p>
+<p><span class="strong">Verteilte Speicherung.</span> Systeme wie IPFS verwenden Erasure Coding — einen nahen Verwandten von IDA — um sicherzustellen, dass kein einziger Server eine vollständige Datei hält.</p>
+<p><span class="strong">Schlüsselverwaltung.</span> In österreichischen Banken und Behörden werden Hardware-Sicherheitsmodule oft mit Shamirs Geheimnisteilung eingesetzt, um den Hauptschlüssel auf mehrere Verwahrer aufzuteilen. Keine Einzelperson kann allein auf den Schlüssel zugreifen.</p>
+<p><span class="strong">Blockchain.</span> Konsensmechanismen beruhen auf Schwellwertannahmen: k von n Validatoren müssen zustimmen, bevor eine Transaktion bestätigt wird.</p>
+${makeDispersioFig({centralised:'zentralisiert',distributed:'verteilt',server:'SERVER',singlept:'einzelner Punkt',danger:'einzelner Ausfallspunkt',resilient:'kein einzelner Ausfallspunkt',caption2:'Abbildung 2 — Zentralisierte vs. verteilte Architektur.'})}`,
+  s6_label: 'Eine Anmerkung zur Sprache',
+  s6: `<p>Österreich hat eine eigene Beziehung zur deutschen Sprache — nicht als Abweichung vom Standard, sondern als eigenständige Variante mit eigenen Wörtern, eigener Grammatik, eigener Geschichte. Jänner statt Januar. Maturant statt Abiturient. Das ist nicht falsch. Das ist ein anderes Zuhause in derselben Sprache.</p>
+<p>Diese Plattform ist in zweiundzwanzig Sprachen verfügbar. Das Wort <span class="em">cifra</span> — Ziffer, Chiffre — gelangte über das Arabische (<span class="em">ṣifr</span>) in die europäischen Sprachen, das selbst aus dem Sanskrit (<span class="em">śūnya</span>) stammt: die Leere, die Null. Eine Idee, die durch Handelsrouten und Minderheitensprachen reiste, bevor sie zur Grundlage der modernen Arithmetik wurde.</p>
+<p>Die Sprachen hier — Bretonisch, Okzitanisch, Baskisch, Rätoromanisch, Luxemburgisch, Katalanisch — sind nicht einbezogen, weil sie viele Sprecher haben. Sie sind einbezogen, weil Verstehen am klarsten in der Sprache ist, die einem am nächsten steht. Minderheitensprachen sind keine Defizite. Sie sind Zuhause für jemanden.</p>
+<div class="pull">Das ist keine politische Position. Es ist eine persönliche. Das sind Sprachen, denen ich aus persönlichen Gründen vertraue — weil ich den etymologischen Büchern vertraue, aus denen sie ausgewählt wurden. Die Auswahl spiegelt dieses Vertrauen wider — nichts mehr und nichts weniger.</div>`,
+  s8_label: 'Die Umgebung, in der das entstanden ist',
+  s8: `<p>Die Maschine auf diesem Foto ist ein ThinkPad. Eine ältere Prozessorgeneration. Sie läuft unter Linux.</p>
+<p>Diese Wahl war keine Präferenz. Es war eine Einschränkung, die zur Überzeugung wurde.</p>
+<p>In Japan hat sich der Konsumentenhardwaremarkt fast vollständig in Richtung Windows bewegt. SSD-ausgestattete Maschinen, GPU-fähige Maschinen, Maschinen für moderne Entwicklung — sie gibt es, aber sie kommen mit Windows. Die HDD-Kultur hielt hier länger an als anderswo. Maschinen mit echter Linux-Kompatibilität, zugänglicher Boot-Konfiguration, austauschbarem RAM und Speicher — diese Maschinen werden auf dem japanischen Markt immer seltener.</p>
+<p>Dieser ThinkPad ist gebraucht. Die SSD wurde ausgetauscht. Der RAM wurde aufgerüstet. Das sind Dinge, die diese Maschine erlaubt — und die die meisten aktuellen japanischen Consumer-Geräte nicht erlauben.</p>
+<div class="pull">Der Grund für die Wahl von Linux ist nicht Ideologie. Es ist Vertrauen. Ein Betriebssystem, das keine Werbung schaltet. Eine Entwicklungsumgebung, in der JavaScript sauber von der Kommandozeile läuft. Ein Terminal, das sich so verhält, wie sich ein Terminal verhalten sollte. Das sind keine Luxusfunktionen. Das sind die Mindestbedingungen für die Arbeit.</div>
+<p>Ich wurde nie formal auf das Irlen-Syndrom untersucht. Ich wollte das. In Japan erfordert der Weg zur Untersuchung eine vorherige Diagnose einer Entwicklungsstörung — ein klinisches Dokument, das diese Kategorie festlegt, bevor die visuelle Frage überhaupt gestellt werden kann. Das Irlen-Syndrom wird nicht als eigenständig anerkannt.</p>
+<p>Ich bewältige das seit mehr als fünfzehn Jahren ohne formale Diagnose. Das Leselineal ist kein Rezept. Es ist etwas, das ich gefunden habe, das funktioniert — und das ich behalten habe.</p>
+<div class="pull">Der visuelle Stress beim Arbeiten in einer schlecht angepassten Umgebung — falscher Kontrast, nicht unterstützte Anzeigeeinstellungen, die angesammelte Reibung eines Bildschirms, der nicht berücksichtigt, wie Licht ankommt — ist nicht getrennt von der Schwierigkeit, das hier zu bauen. Er ist Teil davon. So sieht die Umgebung von innen aus.</div>
+<p>Ich weiß nicht, was die richtige Antwort ist. Was ich sagen kann: Diese Plattform — die Sprachen, die Diagramme, die Sorgfalt bei der Gestaltung einer lesbaren Oberfläche — stammt von jemandem, der weiß, was es kostet, wenn Information nicht für die Person geformt ist, die sie empfängt.</p>
+<p>Das ist kein Ausweis. Es ist ein Grund.</p>`,
+  s7_label: 'Literatur',
+  s7: CONTENT['de'].s7,
+};
+
+// ── DE-CH ─────────────────────────────────────────────────────────────
+CONTENT['de-CH'] = {
+  s1_label: 'Was das ist',
+  s1: `<p>Dieses Dokument existiert aus einem einzigen Grund: eine schwierige Idee zugänglich zu machen.</p>
+<p>Kryptografische Dispersionsalgorithmen — und die verteilten Systeme, die sie ermöglichen — sind nicht intuitiv. Sie wurden nicht so konzipiert. Sie entstanden aus einer konkreten historischen Sorge: Was passiert, wenn ein einziger Kontrollpunkt zu einem einzigen Ausfallpunkt wird — oder schlimmer noch, zu einem einzigen Machtpunkt.</p>
+<div class="pull">Das hier ist kein Lehrmittel. Es ist eine geführte Karte — vom Konzept über das Diagramm bis zum Code — geschrieben für Schülerinnen und Schüler des Gymnasiums sowie Studierende, die verstehen wollen, nicht nur anwenden.</div>`,
+  s2_label: 'Die zentrale Idee: Dispersion',
+  s2: CONTENT['de'].s2,
+  s3_label: 'Woher es kommt',
+  s3: CONTENT['de'].s3,
+  s4_label: 'Die Hawking-Verbindung',
+  s4: CONTENT['de'].s4,
+  s5_label: 'Wo es eingesetzt wird',
+  s5: `<p>Dispersion und Schwellwertkryptografie finden sich an mehr Orten, als die meisten Studierenden ahnen.</p>
+<p><span class="strong">Verteilte Speicherung.</span> Systeme wie IPFS verwenden Erasure Coding für sicheren verteilten Dateispeicher.</p>
+<p><span class="strong">Schlüsselverwaltung.</span> Schweizer Banken und Bundesstellen setzen Hardware-Sicherheitsmodule mit Shamirs Geheimnisteilung ein — eine Methode, die gut zur föderalen Tradition der Gewaltenteilung passt. Keine Einzelperson hält den vollständigen Schlüssel.</p>
+<p><span class="strong">Blockchain.</span> Konsensmechanismen beruhen auf Schwellwertannahmen: k von n Validatoren müssen zustimmen.</p>
+${makeDispersioFig({centralised:'zentralisiert',distributed:'verteilt',server:'SERVER',singlept:'einzelner Punkt',danger:'einzelner Ausfallpunkt',resilient:'kein einzelner Ausfallpunkt',caption2:'Abbildung 2 — Zentralisierte vs. verteilte Architektur.'})}`,
+  s6_label: 'Eine Anmerkung zur Sprache',
+  s6: `<p>Die Schweiz hat vier Landessprachen — Deutsch, Französisch, Italienisch und Rätoromanisch. Das Rätoromanische wird von weniger als hunderttausend Menschen gesprochen. Es ist trotzdem eine Landessprache. Das ist kein Zufall. Es ist eine Entscheidung darüber, was zählt — und was nicht nach Anzahl der Sprecher gemessen werden soll.</p>
+<p>Diese Plattform ist in zweiundzwanzig Sprachen verfügbar. Das Wort <span class="em">cifra</span> — Ziffer, Chiffre — gelangte über das Arabische (<span class="em">ṣifr</span>) in die europäischen Sprachen, das selbst aus dem Sanskrit (<span class="em">śūnya</span>) stammt: die Leere, die Null. Rätoromanisch ist eine dieser Sprachen hier. Das Rätoromanische kommt nicht nur aus einem Buch. Es lebt noch.</p>
+<p>Die anderen Sprachen hier — Bretonisch, Okzitanisch, Baskisch, Luxemburgisch, Katalanisch — haben keine föderale Absicherung. Sie sind trotzdem einbezogen. Nicht weil sie gross sind, sondern weil für jemanden das Verstehen in dieser Sprache klarer ist als in irgendeiner anderen.</p>
+<div class="pull">Das ist keine politische Position — und keine eidgenössische. Es ist eine persönliche. Die Schweiz hat ihre Gründe, den Plurilinguismus zu schützen. Die meinen sind andere: das sind Sprachen, denen ich aus persönlichen Gründen vertraue. Die Auswahl spiegelt dieses Vertrauen wider — nichts mehr und nichts weniger.</div>`,
+  s8_label: 'Die Umgebung, in der das entstanden ist',
+  s8: `<p>Die Maschine auf diesem Foto ist ein ThinkPad. Eine ältere Prozessorgeneration. Sie läuft unter Linux.</p>
+<p>Diese Wahl war keine Präferenz. Es war eine Einschränkung, die zur Überzeugung wurde. In Japan hat sich der Konsumentenhardwaremarkt fast vollständig in Richtung Windows bewegt. Linux-Unterstützung wurde Jahr für Jahr schmaler. HDD-Kultur hielt hier länger an als anderswo.</p>
+<p>Dieser ThinkPad ist gebraucht. SSD und RAM wurden ersetzt und aufgerüstet. Das sind Dinge, die diese Maschine erlaubt — und die die meisten aktuellen japanischen Consumer-Geräte nicht erlauben.</p>
+<div class="pull">Der Grund für die Wahl von Linux ist nicht Ideologie. Es ist Vertrauen. Ein Betriebssystem, das keine Werbung schaltet. Eine Entwicklungsumgebung, in der JavaScript sauber von der Kommandozeile läuft. Das sind keine Luxusfunktionen. Das sind die Mindestbedingungen für die Arbeit.</div>
+<p>Ich wurde nie formal auf das Irlen-Syndrom untersucht — eine Lesehilfe, die in der Schweiz kaum bekannt ist. In Japan erfordert der Weg zur Untersuchung eine vorherige Diagnose einer Entwicklungsstörung. Das Irlen-Syndrom wird nicht als eigenständig anerkannt. Ich bewältige das seit mehr als fünfzehn Jahren ohne formale Diagnose.</p>
+<div class="pull">Der visuelle Stress beim Arbeiten in einer schlecht angepassten Umgebung ist nicht getrennt von der Schwierigkeit, das hier zu bauen. Er ist Teil davon. So sieht die Umgebung von innen aus.</div>
+<p>Was ich sagen kann: Diese Plattform stammt von jemandem, der weiss, was es kostet, wenn Information nicht für die Person geformt ist, die sie empfängt. Das ist kein Ausweis. Es ist ein Grund.</p>`,
+  s7_label: 'Literatur',
+  s7: CONTENT['de'].s7,
+};
+
+// ── IT-CH ─────────────────────────────────────────────────────────────
+CONTENT['it-CH'] = {
+  s1_label: 'Di cosa si tratta',
+  s1: `<p>Questo documento esiste per una sola ragione: rendere accessibile un'idea difficile.</p>
+<p>Gli algoritmi di dispersione crittografica — e i sistemi distribuiti che rendono possibili — non sono intuitivi. Non sono stati progettati per esserlo. Sono emersi da una preoccupazione storica precisa: cosa succede quando un singolo punto di controllo diventa un singolo punto di fallimento, o peggio, un singolo punto di potere.</p>
+<div class="pull">Questo non è un libro di testo. È una mappa guidata — dal concetto al diagramma al codice — scritta per studenti delle scuole medie superiori, del liceo e dell'università che vogliono capire, non solo usare.</div>
+<p>I riferimenti alla fine sono reali. Le spiegazioni sono oneste. I diagrammi ci sono perché un concetto senza forma è più difficile da tenere in mente.</p>`,
+  s2_label: 'L\'idea centrale: la dispersione',
+  s2: CONTENT['it'].s2,
+  s3_label: 'Da dove viene',
+  s3: CONTENT['it'].s3,
+  s4_label: 'Il collegamento con Hawking',
+  s4: CONTENT['it'].s4,
+  s5_label: 'Dove viene utilizzata',
+  s5: `<p>La dispersione e la crittografia a soglia compaiono in più posti di quanto la maggior parte degli studenti si renda conto.</p>
+<p><span class="strong">Archiviazione distribuita.</span> Sistemi come IPFS utilizzano la codifica di cancellazione per garantire che nessun server singolo detenga un file completo.</p>
+<p><span class="strong">Gestione delle chiavi.</span> In Svizzera, i moduli di sicurezza hardware nelle banche e nelle istituzioni federali utilizzano spesso la condivisione del segreto di Shamir per distribuire la chiave principale tra più custodi — un approccio coerente con la tradizione elvetica di potere distribuito. Nessuna singola persona può accedere alla chiave da sola.</p>
+<p><span class="strong">Blockchain.</span> I meccanismi di consenso si basano su assunzioni di soglia: k di n validatori devono concordare prima che una transazione venga confermata.</p>
+${makeDispersioFig({centralised:'centralizzato',distributed:'distribuito',server:'SERVER',singlept:'punto singolo',danger:'punto singolo di fallimento',resilient:'nessun punto singolo di fallimento',caption2:'Figura 2 — Architettura centralizzata vs. dispersa.'})}`,
+  s6_label: 'Una nota sulla lingua',
+  s6: `<p>La Svizzera italiana occupa una posizione strana: è la terza lingua nazionale per numero di parlanti, spesso invisibile nel dibattito pubblico federale, eppure garantita dalla Costituzione. Chi cresce nel Ticino o nei Grigioni italofoni sa che parlare italiano in Svizzera non è la stessa cosa che parlarlo in Italia — e che questa differenza conta.</p>
+<p>Questa piattaforma è disponibile in ventidue lingue — tra cui il romancio, che condivide questo spazio plurilingue con l'italiano svizzero. Il numero non è stato scelto per copertura. È stato scelto seguendo l'origine delle parole.</p>
+<p>La parola <span class="em">cifra</span> è entrata nelle lingue europee attraverso l'arabo (<span class="em">ṣifr</span>), che a sua volta viene dal sanscrito (<span class="em">śūnya</span>): il vuoto, lo zero. Il concetto di nulla che rende possibile la notazione posizionale è arrivato in Europa attraverso lingue minoritarie e rotte commerciali. Questo progetto cerca di invertire quel percorso: portare le idee difficili verso le lingue che le aspettano.</p>
+<div class="pull">Questa non è una posizione politica — e non è una posizione cantonale. È personale. Sono lingue nelle quali ho ragioni personali per fidarmi. La selezione riflette quella fiducia — niente di più, e niente di meno.</div>`,
+  s8_label: 'L\'ambiente in cui questo è stato costruito',
+  s8: `<p>La macchina in questa fotografia è un ThinkPad. Una generazione di CPU più vecchia. Gira sotto Linux.</p>
+<p>Quella scelta non era una preferenza. Era un vincolo diventato convinzione. In Giappone, il mercato hardware consumer si è spostato quasi completamente verso Windows. Il supporto Linux si è ristretto anno dopo anno.</p>
+<p>Questo ThinkPad è di seconda mano. L'SSD è stato sostituito. La RAM è stata potenziata. Queste sono cose che questa macchina consente — e che la maggior parte dell'hardware consumer giapponese attuale non consente.</p>
+<div class="pull">La ragione per scegliere Linux non è l'ideologia. È la fiducia. Un sistema operativo che non serve pubblicità. Un ambiente di sviluppo dove JavaScript gira pulito dalla riga di comando. Queste non sono funzionalità di lusso. Sono le condizioni minime per fare il lavoro.</div>
+<p>Non sono mai stato valutato formalmente per la Sindrome di Irlen. Lo volevo. In Giappone, il percorso verso la valutazione richiede una diagnosi precedente di disabilità dello sviluppo. La Sindrome di Irlen non è riconosciuta come indipendente — nemmeno in Svizzera è semplice, ma almeno il percorso esiste.</p>
+<p>Gestisco questo senza diagnosi formale da più di quindici anni. Il righello da lettura non è una prescrizione. È qualcosa che ho trovato che funzionava, e che ho tenuto.</p>
+<div class="pull">Lo stress visivo del lavorare in un ambiente mal adattato non è separato dalla difficoltà di costruire questo. Ne fa parte. Ecco come appare l'ambiente dall'interno.</div>
+<p>Non so quale sia la risposta giusta. Quello che posso dire è che questa piattaforma — le lingue, i diagrammi, la cura per rendere l'interfaccia leggibile — viene da una persona che sa cosa costa quando l'informazione non è plasmata per la persona che la riceve.</p>
+<p>Non è una credenziale. È una ragione.</p>`,
+  s7_label: 'Riferimenti',
+  s7: CONTENT['it'].s7,
+};
+
+// ── remaining fallback (none should remain, but just in case) ──────────
+LANGS.forEach(l => { if (!CONTENT[l.id]) CONTENT[l.id] = CONTENT['en-GB']; });
+
+// ── render ────────────────────────────────────────────────────────────
+let curLang = getLang();
+
+function buildLangBar(){
+  const bar=document.getElementById('langbar');
+  bar.innerHTML='';
+  LANGS.forEach(l=>{
+    const btn=document.createElement('button');
+    btn.className='lang-btn'+(l.id===curLang?' active':'');
+    btn.textContent=l.label+' '+l.id.toUpperCase();
+    btn.title=l.name;
+    btn.addEventListener('click',()=>{ curLang=l.id; setLang(l.id); render(); });
+    bar.appendChild(btn);
+  });
+}
+
+function render(){
+  const t=CONTENT[curLang]||CONTENT['en-GB'];
+  const en=CONTENT['en-GB'];
+  document.getElementById('content').innerHTML=`
+    <div class="section"><div class="section-label">${t.s1_label}</div><div class="body-text">${t.s1}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s2_label}</div><div class="body-text">${t.s2}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s3_label}</div><div class="body-text">${t.s3}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s4_label}</div><div class="body-text">${t.s4}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s5_label}</div><div class="body-text">${t.s5}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s6_label}</div><div class="body-text">${t.s6}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s8_label||en.s8_label}</div><div class="body-text">${t.s8||en.s8}</div></div>
+    <hr class="divider">
+    <div class="section"><div class="section-label">${t.s7_label}</div>${t.s7}</div>
+  `;
+  buildLangBar();
+  document.getElementById('footerLang').textContent=curLang;
+  document.title=`cifra/dispersio — concept (${curLang})`;
+}
+
+buildLangBar();
+render();
+</script>
+</body>
+</html>

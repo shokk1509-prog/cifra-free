@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cifra/dispersio — free</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080a14;--surface:#0b0d1a;--panel:#0e1020;--border:#1a2248;
+  --accent:#4169e1;--accent2:#6a8fff;--text:#c8d0f0;--dim:#7080b0;--muted:#2a3460;
+  --hawking:#e16941;--crypto:#41e1a8;--paper:#a841e1;--bridge:#4169e1;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:var(--mono);font-size:12px;color:var(--text);display:flex;flex-direction:column;}
+
+/* ── topbar ── */
+.topbar{
+  height:42px;display:flex;align-items:center;gap:0;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:200;padding:0 16px;
+}
+.logo{color:var(--accent);font-weight:700;font-size:14px;letter-spacing:1.5px;margin-right:20px;}
+.tab{
+  height:42px;display:flex;align-items:center;padding:0 14px;
+  font-size:10px;color:var(--dim);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.08em;user-select:none;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.top-btn{
+  font-family:var(--mono);font-size:9px;padding:3px 10px;
+  border:1px solid var(--border);background:transparent;color:var(--dim);
+  border-radius:3px;cursor:pointer;transition:all .15s;letter-spacing:.05em;
+}
+.top-btn:hover{color:var(--text);border-color:var(--muted);}
+.top-btn.on{color:var(--accent);border-color:var(--accent);}
+.top-btn.on-crypto{color:var(--crypto);border-color:var(--crypto);}
+.top-btn.editor-btn{color:var(--hawking);border-color:var(--hawking);background:rgba(225,105,65,.08);}
+
+/* ── workspace ── */
+.workspace{
+  flex:1;display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr;
+  gap:1px;background:var(--border);overflow:hidden;
+  position:relative;
+}
+
+/* ── panes ── */
+.pane{background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column;}
+.pane-header{
+  height:30px;display:flex;align-items:center;gap:10px;padding:0 14px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.pane-title{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+.pane-title.hawking{color:var(--hawking);}
+.pane-title.graph{color:var(--crypto);}
+.pane-title.metrics{color:var(--accent2);}
+.pane-body{flex:1;overflow:hidden;position:relative;}
+
+/* ── THREE canvas ── */
+#bhCanvas{width:100%;height:100%;display:block;}
+
+/* ── D3 ── */
+#graphSvg{width:100%;height:100%;}
+.node circle{stroke-width:1.5;cursor:pointer;transition:filter .15s;}
+.node text{font-family:var(--mono);font-size:8px;fill:var(--dim);pointer-events:none;}
+.node.selected circle{stroke-width:2.5;}
+.glink{fill:none;stroke-opacity:.28;}
+
+/* ── metrics ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);height:100%;}
+.metric-cell{background:var(--bg);padding:10px 14px;display:flex;flex-direction:column;justify-content:center;}
+.mc-label{font-size:8px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:5px;}
+.mc-value{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1;}
+.mc-unit{font-size:9px;color:var(--dim);margin-left:3px;font-weight:300;}
+.mc-bar{margin-top:7px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+.mc-fill{height:100%;border-radius:1px;transition:width .4s;}
+
+/* ── bottom right ── */
+.bottom-right{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;}
+.br-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.br-tab{
+  font-size:9px;padding:0 14px;height:30px;display:flex;align-items:center;
+  color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;
+  letter-spacing:.1em;text-transform:uppercase;transition:all .15s;
+}
+.br-tab.active{color:var(--paper);border-bottom-color:var(--paper);}
+.br-body{flex:1;overflow-y:auto;padding:12px 16px;}
+.br-body::-webkit-scrollbar{width:3px;}
+.br-body::-webkit-scrollbar-thumb{background:var(--muted);}
+.nd-type{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:5px;}
+.nd-title{font-size:13px;font-weight:700;color:#e0e8ff;margin-bottom:7px;line-height:1.4;}
+.nd-src{font-size:9px;color:var(--dim);padding:4px 8px;border:1px solid var(--border);border-radius:2px;margin-bottom:9px;background:var(--panel);}
+.nd-desc{font-size:10px;color:var(--text);line-height:1.9;font-weight:300;margin-bottom:9px;}
+.nd-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.tag{font-size:8px;padding:2px 7px;border-radius:2px;border:1px solid;}
+.tag-h{color:var(--hawking);border-color:rgba(225,105,65,.3);background:rgba(225,105,65,.05);}
+.tag-c{color:var(--crypto);border-color:rgba(65,225,168,.3);background:rgba(65,225,168,.05);}
+.tag-p{color:var(--paper);border-color:rgba(168,65,225,.3);background:rgba(168,65,225,.05);}
+.tag-n{color:var(--dim);border-color:var(--border);}
+.nd-empty{font-size:10px;color:var(--dim);font-style:italic;line-height:1.9;}
+.log-entry{display:flex;gap:8px;font-size:9px;padding:3px 0;border-bottom:1px solid var(--border);}
+.log-t{color:var(--muted);flex-shrink:0;}
+.log-emit{color:var(--hawking);}
+.log-disp{color:var(--crypto);}
+.log-evap{color:#e1c041;}
+.log-info{color:var(--dim);}
+.log-node{color:var(--paper);}
+.log-code{color:var(--accent2);}
+
+/* ── BH controls ── */
+.bh-controls{position:absolute;bottom:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:10;}
+.bh-btn{
+  font-family:var(--mono);font-size:9px;padding:3px 9px;
+  border:1px solid var(--border);background:rgba(8,10,20,.85);color:var(--dim);
+  border-radius:2px;cursor:pointer;transition:all .15s;backdrop-filter:blur(4px);
+}
+.bh-btn:hover{color:var(--text);border-color:var(--muted);}
+.bh-btn.on{color:var(--hawking);border-color:var(--hawking);}
+.bh-btn.on-c{color:var(--crypto);border-color:var(--crypto);}
+.graph-controls{position:absolute;bottom:10px;left:10px;display:flex;gap:6px;z-index:10;}
+
+/* ════════════════════════════════════════════════
+   EDITOR SLIDE-IN PANEL
+════════════════════════════════════════════════ */
+.editor-overlay{
+  position:fixed;top:0;right:0;bottom:0;
+  width:520px;
+  background:rgba(8,10,20,.97);
+  border-left:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  z-index:500;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:-8px 0 40px rgba(0,0,0,.6);
+}
+.editor-overlay.open{transform:translateX(0);}
+
+.editor-topbar{
+  height:42px;display:flex;align-items:center;padding:0 16px;gap:12px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.editor-title{font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--hawking);text-transform:uppercase;}
+.editor-close{
+  margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim);
+  cursor:pointer;padding:3px 8px;border:1px solid var(--border);border-radius:3px;
+  background:transparent;transition:all .15s;
+}
+.editor-close:hover{color:var(--text);border-color:var(--muted);}
+
+.editor-lang-bar{
+  display:flex;gap:4px;padding:6px 14px;
+  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.lang-btn{
+  font-family:var(--mono);font-size:9px;padding:2px 8px;
+  border:1px solid var(--border);background:transparent;color:var(--dim);
+  border-radius:2px;cursor:pointer;transition:all .15s;
+}
+.lang-btn:hover{color:var(--text);}
+.lang-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(65,105,225,.08);}
+
+.editor-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+.editor-area{
+  flex:1;position:relative;overflow:hidden;
+}
+.editor-textarea{
+  width:100%;height:100%;
+  background:transparent;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:12px;
+  line-height:1.7;
+  padding:16px 16px 16px 52px;
+  border:none;outline:none;
+  resize:none;
+  caret-color:var(--hawking);
+  position:relative;z-index:2;
+  tab-size:2;
+}
+.editor-textarea::selection{background:rgba(65,105,225,.25);}
+.line-numbers{
+  position:absolute;left:0;top:0;bottom:0;width:44px;
+  padding:16px 8px 16px 0;
+  font-family:var(--mono);font-size:12px;line-height:1.7;
+  color:var(--muted);text-align:right;
+  pointer-events:none;z-index:1;
+  border-right:1px solid var(--border);
+  overflow:hidden;
+}
+
+.editor-output{
+  height:110px;border-top:1px solid var(--border);
+  background:var(--panel);flex-shrink:0;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.output-header{
+  height:26px;display:flex;align-items:center;padding:0 14px;gap:10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.output-label{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);}
+.run-btn{
+  margin-left:auto;font-family:var(--mono);font-size:9px;padding:2px 10px;
+  border:1px solid var(--crypto);background:rgba(65,225,168,.08);color:var(--crypto);
+  border-radius:2px;cursor:pointer;transition:all .15s;
+}
+.run-btn:hover{background:rgba(65,225,168,.15);}
+.output-body{flex:1;overflow-y:auto;padding:8px 14px;font-size:10px;line-height:1.8;color:var(--dim);}
+.output-body::-webkit-scrollbar{width:3px;}
+.output-body::-webkit-scrollbar-thumb{background:var(--muted);}
+.out-ok{color:var(--crypto);}
+.out-err{color:var(--hawking);}
+.out-info{color:var(--accent2);}
+
+/* match indicator strip */
+.match-strip{
+  padding:6px 14px;border-top:1px solid var(--border);
+  background:var(--surface);flex-shrink:0;
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  min-height:32px;
+}
+.match-label{font-size:8px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;}
+.match-node{
+  font-size:9px;padding:2px 8px;border-radius:2px;border:1px solid;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.match-node.hawking{color:var(--hawking);border-color:rgba(225,105,65,.4);background:rgba(225,105,65,.08);}
+.match-node.crypto{color:var(--crypto);border-color:rgba(65,225,168,.4);background:rgba(65,225,168,.08);}
+.match-node.paper{color:var(--paper);border-color:rgba(168,65,225,.4);background:rgba(168,65,225,.08);}
+.match-node.bridge{color:var(--accent2);border-color:rgba(106,143,255,.4);background:rgba(106,143,255,.08);}
+
+/* node glow pulse */
+@keyframes nodePulse{
+  0%{filter:brightness(1);}
+  50%{filter:brightness(2.2) drop-shadow(0 0 6px currentColor);}
+  100%{filter:brightness(1.4);}
+}
+.node.lit circle{animation:nodePulse .6s ease forwards;}
+
+/* ── guide pane ── */
+.guide-pane{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.guide-pane .pane-header{padding:0 14px;height:36px;display:flex;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
+.guide-body{flex:1;overflow-y:auto;padding:24px 20px 32px;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;}
+.guide-body::-webkit-scrollbar{width:3px;}
+.guide-body::-webkit-scrollbar-thumb{background:var(--dim);}
+
+.g-section{margin-bottom:28px;}
+.g-label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.g-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.g-text{font-size:11px;line-height:1.9;color:var(--text);font-weight:300;}
+.g-text p{margin-bottom:10px;}
+.g-text p:last-child{margin-bottom:0;}
+
+.read-order{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.ro-item{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:3px;background:var(--bg);text-decoration:none;transition:border-color .15s,background .15s;}
+.ro-item:hover{border-color:var(--accent);background:rgba(65,105,225,.06);}
+.ro-num{font-size:16px;font-weight:700;color:var(--accent);line-height:1;flex-shrink:0;width:20px;text-align:center;}
+.ro-content{flex:1;}
+.ro-title{font-size:11px;font-weight:700;color:var(--text);letter-spacing:.05em;margin-bottom:3px;}
+.ro-desc{font-size:9px;color:var(--dim);line-height:1.6;}
+
+/* ── langbar ── */
+.langbar{display:flex;align-items:center;gap:4px;padding:6px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.lang-btn{padding:2px 7px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--mono),monospace;font-size:9px;cursor:pointer;transition:all .15s;user-select:none;}
+.lang-btn:hover{color:var(--text);border-color:var(--muted);}
+.lang-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(65,105,225,.08);}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="logo">cifra/dispersio</div>
+  <span style="font-size:9px;padding:2px 8px;border:1px solid #e14169;color:#e14169;border-radius:2px;letter-spacing:.15em;text-transform:uppercase;">free</span>
+  <div class="tab active">unified</div>
+  <div class="tab">hawking</div>
+  <div class="tab">graph</div>
+  <div class="tab">about</div>
+  <div class="topbar-right">
+    <button class="top-btn editor-btn" id="btnOpenEditor">{ } editor</button>
+  </div>
+</div>
+
+<div class="langbar" id="fLangbar"></div>
+
+<!-- ── WORKSPACE ── -->
+<div class="workspace">
+
+  <!-- LEFT: dispersal graph -->
+  <div class="pane">
+    <div class="pane-header">
+      <span class="pane-title hawking">hawking radiation</span>
+      <span style="margin-left:auto;font-size:9px;color:var(--muted)">T ∝ 1/M</span>
+    </div>
+    <div class="pane-body">
+      <canvas id="bhCanvas" style="width:100%;height:100%;display:block;"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT: guide -->
+  <div class="guide-pane">
+    <div class="pane-header">
+      <span class="pane-title" style="color:var(--accent)" id="guideTitle">dispersio · reading guide</span>
+    </div>
+    <div class="guide-body" id="guideBody"></div>
+  </div>
+
+</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════
+     EDITOR SLIDE-IN PANEL
+════════════════════════════════════════════════ -->
+<div class="editor-overlay" id="editorPanel">
+
+  <div class="editor-topbar">
+    <span class="editor-title">{ } code editor</span>
+    <span style="font-size:9px;color:var(--dim);font-style:italic">type to illuminate the graph</span>
+    <button class="editor-close" id="btnCloseEditor">✕ close</button>
+  </div>
+
+  <div class="editor-lang-bar">
+    <span style="font-size:9px;color:var(--dim);margin-right:4px;letter-spacing:.1em">LANG</span>
+    <button class="lang-btn active" data-lang="js">JS</button>
+    <button class="lang-btn" data-lang="py">PY</button>
+    <button class="lang-btn" data-lang="rs">RS</button>
+  </div>
+
+  <div class="editor-body">
+    <div class="editor-area">
+      <div class="line-numbers" id="lineNumbers">1</div>
+      <textarea class="editor-textarea" id="codeEditor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off">// cifra/dispersio — code editor
+// Type keywords to illuminate connected graph nodes
+// e.g. hawking, entropy, dispersio, threshold, ecc, lattice
+
+function dispersio(message, n, k) {
+  // Information Dispersal Algorithm
+  // Split message into n fragments
+  // Any k fragments reconstruct the original
+  const fragments = [];
+  for (let i = 0; i < n; i++) {
+    fragments.push(encode(message, i, k));
+  }
+  return fragments;
+}
+</textarea>
+    </div>
+
+    <!-- match strip -->
+    <div class="match-strip" id="matchStrip">
+      <span class="match-label">matched →</span>
+      <span id="matchNodes" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+    </div>
+
+    <!-- output -->
+    <div class="editor-output">
+      <div class="output-header">
+        <span class="output-label">output</span>
+        <button class="run-btn" id="btnRun">▶ run</button>
+      </div>
+      <div class="output-body" id="outputBody">
+        <span class="out-info">// ready</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+// ── GUIDE TRANSLATIONS ──────────────────────────────────────
+const FREE_GUIDE = {
+'en-GB':{
+  title:'dispersio · reading guide',
+  s1:'what this graph shows',
+  p1:'The center is a black hole. The dots spreading outward are information particles — each one a fragment of the original message.',
+  p2:'This is Hawking radiation as algorithm: information does not disappear. It disperses. Any sufficient subset of fragments reconstructs the whole.',
+  p3:'The pink nodes and blue nodes represent two types of fragment. Neither alone is enough. Together, they are.',
+  s2:'for classroom use',
+  q:'Question to ask:',qtext:'If you remove one cluster, can the message still be recovered?',
+  k:'Key idea:',ktext:'The threshold k — the minimum number of fragments needed — is a design choice. Security and redundancy are the same variable.',
+  c:'Connection:',ctext:'Shamir (1979) proved this algebraically. Hawking (1974) described it physically. The structure is the same.',
+  s3:'read in this order',
+  r1t:'origin',r1d:'Where this started. Hawking, distance, and why this platform opens in English.',
+  r2t:'about',r2d:'The environment this was built in. ThinkPad, Linux, Irlen syndrome, 扶養内.',
+  r3t:'concept',r3d:'The algorithm, the physics, the etymology. Why 22 languages. The references.',
+  r4t:'here · cifra/dispersio',r4d:'The graph. Static view — orbital computation in full version.',
+},
+'fr':{
+  title:'dispersio · guide de lecture',
+  s1:'ce que montre ce graphe',
+  p1:'Le centre est un trou noir. Les points qui s\'écartent vers l\'extérieur sont des particules d\'information — chacune est un fragment du message original.',
+  p2:'C\'est le rayonnement de Hawking comme algorithme : l\'information ne disparaît pas. Elle se disperse. Tout sous-ensemble suffisant de fragments reconstruit l\'ensemble.',
+  p3:'Les nœuds roses et les nœuds bleus représentent deux types de fragment. Ni l\'un ni l\'autre ne suffit seul. Ensemble, ils y parviennent.',
+  s2:'pour usage en classe',
+  q:'Question à poser :',qtext:'Si vous supprimez un cluster, peut-on encore récupérer le message ?',
+  k:'Idée clé :',ktext:'Le seuil k — le nombre minimum de fragments nécessaires — est un choix de conception. Sécurité et redondance sont la même variable.',
+  c:'Lien :',ctext:'Shamir (1979) l\'a démontré algébriquement. Hawking (1974) l\'a décrit physiquement. La structure est la même.',
+  s3:'lire dans cet ordre',
+  r1t:'origin',r1d:'D\'où tout a commencé. Hawking, la distance, et pourquoi cette plateforme s\'ouvre en anglais.',
+  r2t:'about',r2d:'L\'environnement dans lequel cela a été construit. ThinkPad, Linux, syndrome d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algorithme, la physique, l\'étymologie. Pourquoi 22 langues. Les références.',
+  r4t:'ici · cifra/dispersio',r4d:'Le graphe. Vue statique — calcul orbital dans la version complète.',
+},
+'fr-BE':{
+  title:'dispersio · guide de lecture',
+  s1:'ce que ce graphe représente',
+  p1:'Au centre : un trou noir. Les points qui s\'en écartent sont des particules d\'information — chacune constitue un fragment du message initial.',
+  p2:'C\'est le rayonnement de Hawking traduit en algorithme : l\'information ne se perd pas. Elle se répartit. N\'importe quel sous-ensemble suffisant de fragments suffit à reconstituer le tout.',
+  p3:'Les nœuds roses et les nœuds bleus correspondent à deux catégories de fragments. Séparément, aucun ne suffit. Combinés, si.',
+  s2:'utilisation en contexte scolaire',
+  q:'Question :',qtext:'Si l\'on retire un cluster, le message reste-t-il reconstituable ?',
+  k:'Principe fondamental :',ktext:'Le seuil k — nombre minimal de fragments requis — relève d\'un choix de conception. Sécurité et redondance sont une seule et même variable.',
+  c:'Articulation :',ctext:'Shamir (1979) en a apporté la démonstration algébrique. Hawking (1974) en a fourni la description physique. La structure sous-jacente est identique.',
+  s3:'ordre de lecture conseillé',
+  r1t:'origin',r1d:'Le point de départ. Hawking, la notion de distance, et le choix de l\'anglais comme langue d\'entrée.',
+  r2t:'about',r2d:'Le contexte de fabrication. ThinkPad, Linux, syndrome d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algorithme, la physique, l\'étymologie. Les 22 langues. Les références bibliographiques.',
+  r4t:'ici · cifra/dispersio',r4d:'Le graphe. Affichage statique — calcul orbital réservé à la version complète.',
+},
+'fr-CH':{
+  title:'dispersio · guide de lecture',
+  s1:'description du graphe',
+  p1:'Le centre représente un trou noir. Les points périphériques sont des particules d\'information — chacune constitue un fragment du message source.',
+  p2:'La radiation de Hawking, transposée en algorithme : l\'information ne disparaît pas, elle se distribue. Tout sous-ensemble de taille suffisante permet de reconstituer le message complet.',
+  p3:'Les nœuds roses et les nœuds bleus correspondent à deux types de fragments distincts. Aucun des deux n\'est autonome. Leur combinaison est nécessaire et suffisante.',
+  s2:'usage pédagogique',
+  q:'Question :',qtext:'La suppression d\'un cluster compromet-elle la reconstruction du message ?',
+  k:'Notion centrale :',ktext:'Le seuil k — nombre minimal de fragments requis pour la reconstruction — est un paramètre de conception. Sécurité et redondance constituent la même grandeur.',
+  c:'Correspondance :',ctext:'Shamir (1979) : démonstration algébrique. Hawking (1974) : description physique. La structure formelle est identique dans les deux cas.',
+  s3:'ordre de lecture',
+  r1t:'origin',r1d:'Genèse du projet. Hawking, la notion de distance, choix de l\'anglais comme langue initiale.',
+  r2t:'about',r2d:'Conditions de réalisation. ThinkPad, Linux, syndrome d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'Algorithme, physique, étymologie. Justification des 22 langues. Références.',
+  r4t:'ici · cifra/dispersio',r4d:'Graphe statique. Calcul orbital disponible dans la version complète.',
+},
+'fr-CA':{
+  title:'dispersio · guide de lecture',
+  s1:'ce que ce graphe montre',
+  p1:'Le centre, c\'est un trou noir. Les points qui s\'écartent vers l\'extérieur, c\'est des particules d\'information — chacune est un fragment du message original.',
+  p2:'C\'est le rayonnement de Hawking vu comme un algorithme : l\'information part pas en fumée. A se disperse. N\'importe quel sous-ensemble assez grand de fragments permet de rebâtir le tout.',
+  p3:'Les nœuds roses pis les nœuds bleus, c\'est deux sortes de fragments. Toutes seules, ces sortes-là, ça marche pas. Ensemble, c\'est une autre histoire.',
+  s2:'pour utilisation en classe',
+  q:'Question à poser :',qtext:'Si vous enlevez un cluster, est-ce qu\'on peut encore récupérer le message ?',
+  k:'Idée de fond :',ktext:'Le seuil k — le nombre plancher de fragments qu\'il te faut — c\'est toi qui le décides à la conception. Sécurité pis redondance, dans l\'fond, c\'est le même bouton.',
+  c:'Lien :',ctext:'Shamir (1979) l\'a prouvé algébriquement. Hawking (1974) l\'a décrit physiquement. La structure est la même.',
+  s3:'lire dans cet ordre',
+  r1t:'origin',r1d:'D\'où tout a parti. Hawking, la distance, pis pourquoi cette plateforme s\'ouvre en anglais.',
+  r2t:'about',r2d:'L\'environnement dans lequel c\'a été construit. ThinkPad, Linux, syndrome d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algorithme, la physique, l\'étymologie. Pourquoi 22 langues. Les références.',
+  r4t:'ici · cifra/dispersio',r4d:'Le graphe. Vue statique — calcul orbital dans la version complète.',
+},
+'de':{
+  title:'dispersio · Leseleitfaden',
+  s1:'was dieser Graph zeigt',
+  p1:'In der Mitte befindet sich ein schwarzes Loch. Die Punkte, die sich nach außen ausbreiten, sind Informationspartikel — jeder ein Bruchstück der ursprünglichen Nachricht.',
+  p2:'Die Hawking-Strahlung, übertragen auf einen Algorithmus: Information geht nicht verloren. Sie wird verteilt. Jede ausreichend grosse Teilmenge von Fragmenten ermöglicht die Rekonstruktion des Ganzen.',
+  p3:'Die rosa und die blauen Knoten stellen zwei Arten von Fragmenten dar. Keiner allein reicht aus. Zusammen schon.',
+  s2:'für den Unterricht',
+  q:'Frage:',qtext:'Wenn man einen Cluster entfernt — kann die Nachricht noch wiederhergestellt werden?',
+  k:'Wesentlicher Gedanke:',ktext:'Der Schwellenwert k — die Mindestanzahl an Fragmenten, die man braucht — ist eine Entwurfsentscheidung. Sicherheit und Redundanz sind ein und dieselbe Größe.',
+  c:'Verbindung:',ctext:'Shamir (1979) bewies dies algebraisch. Hawking (1974) beschrieb es physikalisch. Die Struktur ist dieselbe.',
+  s3:'in dieser Reihenfolge lesen',
+  r1t:'origin',r1d:'Wo alles begann. Hawking, Distanz, und warum diese Plattform auf Englisch öffnet.',
+  r2t:'about',r2d:'Die Umgebung, in der es gebaut wurde. ThinkPad, Linux, Irlen-Syndrom, 扶養内.',
+  r3t:'concept',r3d:'Der Algorithmus, die Physik, die Etymologie. Warum 22 Sprachen. Die Referenzen.',
+  r4t:'hier · cifra/dispersio',r4d:'Der Graph. Statische Ansicht — Orbitalberechnung in der Vollversion.',
+},
+'de-AT':{
+  title:'dispersio · Leseleitfaden',
+  s1:'was dieser Graph zeigt',
+  p1:'In der Mitte befindet sich ein schwarzes Loch. Die Punkte, die sich nach außen ausbreiten, sind Informationspartikel — jeder ein Bruchstück der ursprünglichen Nachricht.',
+  p2:'Das ist die Hawking-Strahlung als Algorithmus gedacht: Information geht nicht verloren. Sie teilt sich auf. Jede hinlänglich große Teilmenge an Fragmenten lässt sich zum Ganzen zusammensetzen.',
+  p3:'Die rosa und die blauen Knoten stellen zwei Arten von Fragmenten dar. Keiner allein reicht aus. Zusammen schon.',
+  s2:'für den Unterricht',
+  q:'Frage:',qtext:'Wenn man einen Cluster entfernt — kann die Nachricht noch wiederhergestellt werden?',
+  k:'Wesentlicher Gedanke:',ktext:'Der Schwellenwert k — die Mindestanzahl an Fragmenten, die man braucht — ist eine Entwurfsentscheidung. Sicherheit und Redundanz sind ein und dieselbe Größe.',
+  c:'Verbindung:',ctext:'Shamir (1979) hat das algebraisch bewiesen. Hawking (1974) hat es physikalisch beschrieben. Die Struktur ist dieselbe.',
+  s3:'in dieser Reihenfolge lesen',
+  r1t:'origin',r1d:'Wie alles losgegangen ist. Hawking, die Distanz, und warum diese Plattform auf Englisch aufmacht.',
+  r2t:'about',r2d:'Die Umgebung, in der es gebaut wurde. ThinkPad, Linux, Irlen-Syndrom, 扶養内.',
+  r3t:'concept',r3d:'Der Algorithmus, die Physik, die Etymologie. Warum 22 Sprachen. Die Referenzen.',
+  r4t:'hier · cifra/dispersio',r4d:'Der Graph. Statische Ansicht — Orbitalberechnung in der Vollversion.',
+},
+'de-CH':{
+  title:'dispersio · Leseleitfaden',
+  s1:'was dieser Graph zeigt',
+  p1:'Im Zentrum befindet sich ein schwarzes Loch. Die Punkte, die sich nach aussen verteilen, sind Informationspartikel — jeder davon ein Bruchstück der ursprünglichen Nachricht.',
+  p2:'Die Hawking-Strahlung, übertragen auf einen Algorithmus: Information geht nicht verloren. Sie wird verteilt. Jede ausreichend grosse Teilmenge von Fragmenten ermöglicht die Rekonstruktion des Ganzen.',
+  p3:'Die rosa und die blauen Knoten stellen zwei Arten von Fragmenten dar. Keiner allein genügt. Zusammen schon.',
+  s2:'für den Unterricht',
+  q:'Frage:',qtext:'Wenn man einen Cluster entfernt — kann die Nachricht noch wiederhergestellt werden?',
+  k:'Wesentlicher Gedanke:',ktext:'Der Schwellenwert k — die Mindestanzahl an Fragmenten, die man braucht — ist eine Entwurfsentscheidung. Sicherheit und Redundanz sind ein und dieselbe Größe.',
+  c:'Formale Entsprechung:',ctext:'Shamir (1979) lieferte den algebraischen Beweis. Hawking (1974) lieferte die physikalische Beschreibung. Die zugrunde liegende Struktur ist in beiden Fällen identisch.',
+  s3:'in dieser Reihenfolge lesen',
+  r1t:'origin',r1d:'Wo alles begann. Hawking, Distanz, und warum diese Plattform auf Englisch öffnet.',
+  r2t:'about',r2d:'Die Umgebung, in der es gebaut wurde. ThinkPad, Linux, Irlen-Syndrom, 扶養内.',
+  r3t:'concept',r3d:'Der Algorithmus, die Physik, die Etymologie. Warum 22 Sprachen. Die Referenzen.',
+  r4t:'hier · cifra/dispersio',r4d:'Der Graph. Statische Ansicht — Orbitalberechnung in der Vollversion.',
+},
+'nl':{
+  title:'dispersio · leeswijzer',
+  s1:'wat deze grafiek toont',
+  p1:'Het centrum is een zwart gat. De punten die naar buiten uitspreiden zijn informatiepartikels — elk een fragment van het oorspronkelijke bericht.',
+  p2:'Dit is Hawking-straling als algoritme: informatie verdwijnt niet. Ze verspreidt zich. Elke voldoende deelverzameling van fragmenten reconstrueert het geheel.',
+  p3:'De roze en blauwe knooppunten vertegenwoordigen twee soorten fragmenten. Geen van beide is op zichzelf voldoende. Samen wel.',
+  s2:'voor gebruik in de klas',
+  q:'Vraag:',qtext:'Als je één cluster verwijdert — kan het bericht dan nog worden hersteld?',
+  k:'Kernidee:',ktext:'De drempelwaarde k — het minimale aantal benodigde fragmenten — is een ontwerpkeuze. Beveiliging en redundantie zijn dezelfde variabele.',
+  c:'Verband:',ctext:'Shamir (1979) bewees dit algebraïsch. Hawking (1974) beschreef het fysisch. De structuur is dezelfde.',
+  s3:'lees in deze volgorde',
+  r1t:'origin',r1d:'Waar alles begon. Hawking, afstand, en waarom dit platform opent in het Engels.',
+  r2t:'about',r2d:'De omgeving waarin dit gebouwd werd. ThinkPad, Linux, Irlen-syndroom, 扶養内.',
+  r3t:'concept',r3d:'Het algoritme, de fysica, de etymologie. Waarom 22 talen. De referenties.',
+  r4t:'hier · cifra/dispersio',r4d:'De grafiek. Statische weergave — orbitaalberekening in de volledige versie.',
+},
+'lb':{
+  title:'dispersio · Liisleedsfuedem',
+  s1:'wat dëse Graph weist',
+  p1:'De Mëtt ass e schwaarzt Lach. D\'Punkten, déi no baussen ausbreeden, sinn Informatiounspartikelen — all eent e Fragment vun der ursprénglecher Noriicht.',
+  p2:'Dat ass Hawking-Stralung als Algorithmus: Informatioun verschwinnt net. Si verdeelt sech. All genuch grouss Deelmeng vu Fragmenter rekonstruéiert dat Ganzt.',
+  p3:'D\'rosa an d\'blo Knäppchen stellen zwou Zorte vu Fragmenter duer. Keen eleng duegt. Zesumme jo.',
+  s2:'fir de Schoulasaz',
+  q:'Fro:',qtext:'Wann een e Cluster ewechhuelt — kann d\'Noriicht nach restauréiert ginn?',
+  k:'Kerniddi:',ktext:'De Schwellenwäert k — d\'Mindestanzahl u gebraauchte Fragmenter — ass eng Designentscheedung. Sécherheet a Redundanz sinn déiselwecht Variabel.',
+  c:'Verbindung:',ctext:'Shamir (1979) huet dat algebraesch bewisen. Hawking (1974) huet et physikalesch beschriwwen. D\'Struktur ass déiselwecht.',
+  s3:'an dëser Uerdnung liesen',
+  r1t:'origin',r1d:'Wou alles ugefaangen huet. Hawking, Distanz, a firwat dës Plattform op Englesch opmaacht.',
+  r2t:'about',r2d:'D\'Ëmfeld, an deem et gebaut gouf. ThinkPad, Linux, Irlen-Syndrom, 扶養内.',
+  r3t:'concept',r3d:'Den Algorithmus, d\'Physik, d\'Etymologie. Firwat 22 Sprooche. D\'Referenzen.',
+  r4t:'hei · cifra/dispersio',r4d:'De Graph. Statesch Vue — Orbitalberechnung an der Vollversioun.',
+},
+'it':{
+  title:'dispersio · guida alla lettura',
+  s1:'cosa mostra questo grafico',
+  p1:'Il centro è un buco nero. I punti che si espandono verso l\'esterno sono particelle di informazione — ognuna un frammento del messaggio originale.',
+  p2:'Questa è la radiazione di Hawking come algoritmo: l\'informazione non scompare. Si disperde. Qualsiasi sottoinsieme sufficiente di frammenti ricostruisce l\'intero.',
+  p3:'I nodi rosa e i nodi blu rappresentano due tipi di frammenti. Nessuno dei due da solo è sufficiente. Insieme, sì.',
+  s2:'per uso in classe',
+  q:'Domanda:',qtext:'Se si rimuove un cluster, il messaggio può ancora essere recuperato?',
+  k:'Concetto centrale:',ktext:'La soglia k — il numero minimo di frammenti necessari per la ricostruzione — è una scelta di progettazione. Sicurezza e ridondanza costituiscono la medesima grandezza.',
+  c:'Corrispondenza formale:',ctext:'Shamir (1979) ne ha fornito la dimostrazione algebrica. Hawking (1974) la descrizione fisica. La struttura sottostante è la stessa in entrambi i casi.',
+  s3:'ordine di lettura consigliato',
+  r1t:'origin',r1d:'Genesi del progetto. Hawking, la nozione di distanza, la scelta dell\'inglese come lingua di apertura.',
+  r2t:'about',r2d:'Il contesto in cui è stato realizzato. ThinkPad, Linux, sindrome di Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritmo, la fisica, l\'etimologia. Le 22 lingue. I riferimenti bibliografici.',
+  r4t:'qui · cifra/dispersio',r4d:'Il grafico. Visualizzazione statica — calcolo orbitale disponibile nella versione completa.',
+},
+'it-CH':{
+  title:'dispersio · guida alla lettura',
+  s1:'lettura del grafico',
+  p1:'Al centro si trova un buco nero. I punti che si espandono verso l\'esterno sono particelle di informazione — ciascuna rappresenta un frammento del messaggio originale.',
+  p2:'Si tratta della radiazione di Hawking tradotta in algoritmo: l\'informazione non scompare. Viene distribuita. Qualsiasi sottoinsieme di dimensione sufficiente permette di ricostruire il messaggio completo.',
+  p3:'I nodi rosa e i nodi blu rappresentano due tipi di frammenti. Nessuno dei due da solo è sufficiente. Insieme, sì.',
+  s2:'per uso in classe',
+  q:'Domanda:',qtext:'Se si rimuove un cluster, il messaggio può ancora essere recuperato?',
+  k:'Concetto centrale:',ktext:'La soglia k — il numero minimo di frammenti necessari per la ricostruzione — è una scelta di progettazione. Sicurezza e ridondanza costituiscono la medesima grandezza.',
+  c:'Corrispondenza formale:',ctext:'Shamir (1979) ne ha fornito la dimostrazione algebrica. Hawking (1974) la descrizione fisica. La struttura sottostante è la stessa in entrambi i casi.',
+  s3:'ordine di lettura consigliato',
+  r1t:'origin',r1d:'Genesi del progetto. Hawking, la nozione di distanza, la scelta dell\'inglese come lingua di apertura.',
+  r2t:'about',r2d:'Il contesto in cui è stato realizzato. ThinkPad, Linux, sindrome di Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritmo, la fisica, l\'etimologia. Le 22 lingue. I riferimenti bibliografici.',
+  r4t:'qui · cifra/dispersio',r4d:'Il grafico. Visualizzazione statica — calcolo orbitale disponibile nella versione completa.',
+},
+'pt':{
+  title:'dispersio · guia de leitura',
+  s1:'o que este gráfico mostra',
+  p1:'O centro é um buraco negro. Os pontos que se expandem para o exterior são partículas de informação — cada uma um fragmento da mensagem original.',
+  p2:'Isto é a radiação de Hawking como algoritmo: a informação não desaparece. Dispersa-se. Qualquer subconjunto suficiente de fragmentos reconstrói o todo.',
+  p3:'Os nós cor-de-rosa e os nós azuis representam dois tipos de fragmento. Nenhum deles sozinho é suficiente. Juntos, sim.',
+  s2:'para uso em sala de aula',
+  q:'Pergunta:',qtext:'Se remover um cluster, a mensagem ainda pode ser recuperada?',
+  k:'Ideia central:',ktext:'O limiar k — o número mínimo de fragmentos necessários — é uma escolha de design. Segurança e redundância são a mesma variável.',
+  c:'Ligação:',ctext:'Shamir (1979) provou isso algebricamente. Hawking (1974) descreveu-o fisicamente. A estrutura é a mesma.',
+  s3:'ler nesta ordem',
+  r1t:'origin',r1d:'De onde tudo começou. Hawking, a distância, e por que esta plataforma abre em inglês.',
+  r2t:'about',r2d:'O ambiente em que foi construído. ThinkPad, Linux, síndrome de Irlen, 扶養内.',
+  r3t:'concept',r3d:'O algoritmo, a física, a etimologia. Porque 22 línguas. As referências.',
+  r4t:'aqui · cifra/dispersio',r4d:'O gráfico. Vista estática — cálculo orbital na versão completa.',
+},
+'es':{
+  title:'dispersio · guía de lectura',
+  s1:'qué muestra este gráfico',
+  p1:'El centro es un agujero negro. Los puntos que se expanden hacia afuera son partículas de información — cada una un fragmento del mensaje original.',
+  p2:'Esto es la radiación de Hawking como algoritmo: la información no desaparece. Se dispersa. Cualquier subconjunto suficiente de fragmentos reconstruye el todo.',
+  p3:'Los nodos rosas y los nodos azules representan dos tipos de fragmentos. Ninguno por sí solo es suficiente. Juntos, sí.',
+  s2:'para uso en clase',
+  q:'Pregunta:',qtext:'Si se elimina un cluster, ¿puede recuperarse todavía el mensaje?',
+  k:'Idea clave:',ktext:'El umbral k — el número mínimo de fragmentos necesarios — es una elección de diseño. Seguridad y redundancia son la misma variable.',
+  c:'Conexión:',ctext:'Shamir (1979) lo demostró algebraicamente. Hawking (1974) lo describió físicamente. La estructura es la misma.',
+  s3:'leer en este orden',
+  r1t:'origin',r1d:'De dónde empezó todo. Hawking, la distancia, y por qué esta plataforma abre en inglés.',
+  r2t:'about',r2d:'El entorno en el que fue construido. ThinkPad, Linux, síndrome de Irlen, 扶養内.',
+  r3t:'concept',r3d:'El algoritmo, la física, la etimología. Por qué 22 idiomas. Las referencias.',
+  r4t:'aquí · cifra/dispersio',r4d:'El gráfico. Vista estática — cálculo orbital en la versión completa.',
+},
+'is':{
+  title:'dispersio · leshandbók',
+  s1:'hvað þetta graf sýnir',
+  p1:'Miðjan er svarthol. Punktarnir sem breiðast út eru upplýsingaagnir — hver og ein brot af upprunalega skilaboðinu.',
+  p2:'Þetta er Hawking-geislun sem reiknirit: upplýsingar hverfa ekki. Þær dreifist. Sérhver nægilegur hlutmengi brota endurbyggir heildina.',
+  p3:'Bleiku og bláu hnútarnir tákna tvær tegundir brota. Hvorug ein er nóg ein og sér. Saman eru þær það.',
+  s2:'til notkunar í kennslu',
+  q:'Spurning:',qtext:'Ef þú fjarlægir einn klasa — er hægt að endurheimta skilaboðin?',
+  k:'Lykilhugmynd:',ktext:'Þröskuldurinn k — lágmarksfjöldi nauðsynlegra brota — er hönnunarval. Öryggi og ofgnótt eru sama breytan.',
+  c:'Tengsl:',ctext:'Shamir (1979) sannaði þetta algebrulega. Hawking (1974) lýsti því eðlisfræðilega. Uppbyggingin er sú sama.',
+  s3:'lestu í þessari röð',
+  r1t:'origin',r1d:'Hvar allt hófst. Hawking, fjarlægð, og af hverju þessi vettvangur opnar á ensku.',
+  r2t:'about',r2d:'Umhverfið sem þetta var byggt í. ThinkPad, Linux, Irlen-heilkenni, 扶養内.',
+  r3t:'concept',r3d:'Reikniritið, eðlisfræðin, orðsifjafræðin. Af hverju 22 tungumál. Heimildarnar.',
+  r4t:'hér · cifra/dispersio',r4d:'Grafið. Kyrrstæð sýn — sporbrautarútreikningur í fullri útgáfu.',
+},
+'ca':{
+  title:'dispersio · guia de lectura',
+  s1:'què mostra aquest gràfic',
+  p1:'El centre és un forat negre. Els punts que s\'expandeixen cap a l\'exterior són partícules d\'informació — cadascun un fragment del missatge original.',
+  p2:'Això és la radiació de Hawking com a algoritme: la informació no desapareix. Es dispersa. Qualsevol subconjunt suficient de fragments reconstrueix el tot.',
+  p3:'Els nodes roses i els nodes blaus representen dos tipus de fragments. Cap dels dos sol és suficient. Junts, sí.',
+  s2:'per a ús a l\'aula',
+  q:'Pregunta:',qtext:'Si s\'elimina un clúster, el missatge encara es pot recuperar?',
+  k:'Idea clau:',ktext:'El llindar k — el nombre mínim de fragments necessaris — és una elecció de disseny. Seguretat i redundància són la mateixa variable.',
+  c:'Connexió:',ctext:'Shamir (1979) ho va demostrar algebraicament. Hawking (1974) ho va descriure físicament. L\'estructura és la mateixa.',
+  s3:'llegiu en aquest ordre',
+  r1t:'origin',r1d:'D\'on va començar tot. Hawking, la distància, i per què aquesta plataforma obre en anglès.',
+  r2t:'about',r2d:'L\'entorn en què es va construir. ThinkPad, Linux, síndrome d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritme, la física, l\'etimologia. Per què 22 llengües. Les referències.',
+  r4t:'aquí · cifra/dispersio',r4d:'El gràfic. Vista estàtica — càlcul orbital en la versió completa.',
+},
+'eu':{
+  title:'dispersio · irakurketa gida',
+  s1:'grafiko honek zer erakusten duen',
+  p1:'Erdigunea zulo beltz bat da. Kanporantz hedatzen diren puntuak informazio-partikulak dira — bakoitza jatorrizko mezuaren zati bat.',
+  p2:'Hau Hawking erradiazioa algoritmo gisa da: informazioa ez da desagertzen. Barreiatzen da. Zatien edozein azpimultzo nahikoak osotasuna berreraikitzen du.',
+  p3:'Nodo arrosak eta urdinak bi zati mota adierazten dituzte. Ezta bakarrak ere nahikoa. Elkarrekin, bai.',
+  s2:'gelan erabiltzeko',
+  q:'Galdera:',qtext:'Kluster bat kentzen baduzu — mezua oraindik berreskura daiteke?',
+  k:'Funtsezko ideia:',ktext:'k ataria — beharrezko zati kopuru minimoa — diseinuaren aukeraketa da. Segurtasuna eta erredundantzia aldagai bera dira.',
+  c:'Lotura:',ctext:'Shamir-ek (1979) algebraikoki frogatu zuen. Hawking-ek (1974) fisikoki deskribatu zuen. Egitura berdina da.',
+  s3:'irakurri hurrengo ordenan',
+  r1t:'origin',r1d:'Dena non hasi zen. Hawking, distantzia, eta zergatik plataforma hau ingelesez irekitzen den.',
+  r2t:'about',r2d:'Eraiki zen ingurunea. ThinkPad, Linux, Irlen sindromea, 扶養内.',
+  r3t:'concept',r3d:'Algoritmoa, fisika, etimologia. Zergatik 22 hizkuntza. Erreferentziak.',
+  r4t:'hemen · cifra/dispersio',r4d:'Grafikoa. Ikuspegi estatikoa — orbita-kalkulua bertsio osoan.',
+},
+'gl':{
+  title:'dispersio · guía de lectura',
+  s1:'que mostra este gráfico',
+  p1:'O centro é un burato negro. Os puntos que se expanden cara ao exterior son partículas de información — cada un un fragmento da mensaxe orixinal.',
+  p2:'Isto é a radiación de Hawking como algoritmo: a información non desaparece. Dispérsase. Calquera subconxunto suficiente de fragmentos reconstrúe o todo.',
+  p3:'Os nodos rosas e os nodos azuis representan dous tipos de fragmentos. Ningún deles só é suficiente. Xuntos, si.',
+  s2:'para uso na aula',
+  q:'Pregunta:',qtext:'Se se elimina un cluster, pode recuperarse aínda a mensaxe?',
+  k:'Idea clave:',ktext:'O limiar k — o número mínimo de fragmentos necesarios — é unha elección de deseño. Seguridade e redundancia son a mesma variable.',
+  c:'Conexión:',ctext:'Shamir (1979) demostroullo alxebraicamente. Hawking (1974) describíullo fisicamente. A estrutura é a mesma.',
+  s3:'ler nesta orde',
+  r1t:'origin',r1d:'De onde comezou todo. Hawking, a distancia, e por que esta plataforma abre en inglés.',
+  r2t:'about',r2d:'O ambiente no que foi construído. ThinkPad, Linux, síndrome de Irlen, 扶養内.',
+  r3t:'concept',r3d:'O algoritmo, a física, a etimoloxía. Por que 22 linguas. As referencias.',
+  r4t:'aquí · cifra/dispersio',r4d:'O gráfico. Vista estática — cálculo orbital na versión completa.',
+},
+'oc':{
+  title:'dispersio · guida de lectura',
+  s1:'çò que mostra aqueste gràfe',
+  p1:'Lo centre es un trauc negre. Los punts que s\'espandisson cap a defòra son partículas d\'informacion — cadun un fragment del messatge original.',
+  p2:'Aquò es lo raionament de Hawking coma algoritme : l\'informacion dispareis pas. Se dispersa. Tot sosensemble sufisent de fragments reconstruís l\'ensemble.',
+  p3:'Los nòdes roses e los nòdes blaus representan dos tipes de fragments. Ni l\'un ni l\'autre sol basta. Ensemble, òc.',
+  s2:'per utilizar en classa',
+  q:'Question :',qtext:'Se suprimissètz un cluster, lo messatge pòt encara estre recuperat ?',
+  k:'Idèa clau :',ktext:'Lo seuil k — lo nombre minimum de fragments necessaris — es un causit de concepcion. Seguretat e redundança son la meteissa variabla.',
+  c:'Ligam :',ctext:'Shamir (1979) l\'a demostrat algebricament. Hawking (1974) l\'a descrit fisicament. L\'estructura es la meteissa.',
+  s3:'legir dins aqueste òrdre',
+  r1t:'origin',r1d:'D\'ont tot a començat. Hawking, la distança, e perqué aquesta plataforma s\'ubre en anglés.',
+  r2t:'about',r2d:'L\'environament ont es estat construit. ThinkPad, Linux, sindròme d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritme, la fisica, l\'etimologia. Perqué 22 lengas. Las referencas.',
+  r4t:'aquí · cifra/dispersio',r4d:'Lo gràfe. Vista estatica — calcul orbital dins la version completa.',
+},
+'br':{
+  title:'dispersio · roll-lenn',
+  s1:'petra a ziskouez ar graf-mañ',
+  p1:'Ar c\'hreiz a zo ur c\'hlougen du. Ar poentioù o ledan war-zu an diaraok a zo rannelloù titouroù — pep hini o vezañ tamm eus ar gemennadenn orin.',
+  p2:'Setu radiañ Hawking evel un algoritm : an titouroù n\'int ket o vont da get. E dispersont. Nep issplegad a rannelloù a adstumm an hollad.',
+  p3:'Ar skoulmoù roz hag ar skoulmoù glas a ziskouez daou seurt rannell. Hini ebet hepken a ra an afer. Asambles, ya.',
+  s2:'evit implij en deskadurezh',
+  q:'Goulenn :',qtext:'Ma tivennit ur c\'hluster, ha haller c\'hoazh adkaout ar gemennadenn ?',
+  k:'Ster pouezus :',ktext:'Ar seuil k — niver izek ar rannelloù ret — a zo dibabl diskoñv. Surentez ha rouedad a zo an hevelep forzh.',
+  c:'Kevread :',ctext:'Shamir (1979) en deus diskouezet se ent algebrek. Hawking (1974) en deus deskrivit se ent fisegel. Ar stummadur a zo hevelep.',
+  s3:'lenn en urzh-mañ',
+  r1t:'origin',r1d:'Pelec\'h ez eus lakaet an traoù da vont. Hawking, an distañs, ha perak ar yezhouadur-mañ a zigouez e saozneg.',
+  r2t:'about',r2d:'An endro m\'eus savet ennañ. ThinkPad, Linux, sindrom Irlen, 扶養内.',
+  r3t:'concept',r3d:'An algoritm, ar fiseg, an etimologia. Perak 22 yezh. Ar c\'hyferiañsoù.',
+  r4t:'amañ · cifra/dispersio',r4d:'Ar graf. Gwel stag — kalkul orbital en destenn leun.',
+},
+'co':{
+  title:'dispersio · guida di lettura',
+  s1:'ciò chì mostra stu graficu',
+  p1:'U centru hè un bughju neru. I punti chì si spandenu versu l\'esternu sò particule d\'infurmazione — ognunu un frammento di u messagiu uriginale.',
+  p2:'Questu hè a radiazione di Hawking cum\'è algoritmu : l\'infurmazione ùn sparisce micca. Si dispersa. Qualsiasi suttoinsiemu sufficiente di frammenti ricustruisce u tuttu.',
+  p3:'I nodi rosa è i nodi blù rapprisentanu dui tipi di frammenti. Nisunu di i dui solu hè abbastanza. Inseme, sì.',
+  s2:'per usu in classa',
+  q:'Dumanda :',qtext:'Se si sguassà un cluster, u messagiu pò esse ancu ricuperatu ?',
+  k:'Idea chjave :',ktext:'A soglia k — u numeru minimu di frammenti necessarii — hè una scelta di cuncepimentu. Sicurità è redundanza sò a stessa variabile.',
+  c:'Cunnessione :',ctext:'Shamir (1979) l\'hà dimustratu algebricamente. Hawking (1974) l\'hà descritu fisicamente. A struttura hè a stessa.',
+  s3:'leghje in questu ordine',
+  r1t:'origin',r1d:'Induve tuttu hà cumincatu. Hawking, a distanza, è perchè sta piattaforma si apre in inglese.',
+  r2t:'about',r2d:'L\'ambiente induve hè statu custruitu. ThinkPad, Linux, sindromu d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritmu, a fisica, l\'etimulugia. Perchè 22 lingue. I riferimenti.',
+  r4t:'quì · cifra/dispersio',r4d:'U graficu. Vista statica — calculu orbitale in a versione completa.',
+},
+'rm':{
+  title:'dispersio · lectura-guid',
+  s1:'tge che quel graf mussa',
+  p1:'Il center è in but nair. Las pünts che s\'expandeschan vers l\'extern sun particlas d\'infurmaziun — mintgina in fragment dal messadi original.',
+  p2:'Quai è la radiaziun da Hawking sco algoritmus : l\'infurmaziun na svanischa betg. Ella sa dispersa. Mincha sutensemble sufficient da fragments reconstruescha il total.',
+  p3:'Las nùdas rosas ed las nùdas bleras represchenteschan dus tips da fragments. Nagin da quels sulet basta. Ensemen, gea.',
+  s2:'per diever en scola',
+  q:'Dumonda :',qtext:'Sch\'ins strichescha in cluster — po il messadi anc vegnir restaurà ?',
+  k:'Ideia principala :',ktext:'La valur da söglia k — il numer minim da fragments necessaris — è ina decisiun da design. Segirezza e redundanza sun la medema variabla.',
+  c:'Coliaziun :',ctext:'Shamir (1979) ha pruvà quai algebricamain. Hawking (1974) l\'ha descrit fisicamain. La structura è la medema.',
+  s3:'leger en quest urden',
+  r1t:'origin',r1d:'Nua che tut ha cumenzà. Hawking, la distanza, ed perquai questa plattaforma avra en englais.',
+  r2t:'about',r2d:'L\'ambient en il qual quai è vegnì fatg. ThinkPad, Linux, sindrom d\'Irlen, 扶養内.',
+  r3t:'concept',r3d:'L\'algoritmus, la fisica, l\'etimologia. Perquai 22 linguas. Las referenzas.',
+  r4t:'qua · cifra/dispersio',r4d:'Il graf. Vista statica — calculaziun orbitala en la versiun completta.',
+},
+};
+
+function renderGuide(lang) {
+  const t = FREE_GUIDE[lang] || FREE_GUIDE['en-GB'];
+  document.getElementById('guideTitle').textContent = t.title;
+  document.getElementById('guideBody').innerHTML = `
+    <div class="g-section">
+      <div class="g-label">${t.s1}</div>
+      <div class="g-text">
+        <p>${t.p1}</p><p>${t.p2}</p><p>${t.p3}</p>
+      </div>
+    </div>
+    <div class="g-section">
+      <div class="g-label">${t.s2}</div>
+      <div class="g-text">
+        <p><strong style="color:var(--text)">${t.q}</strong> ${t.qtext}</p>
+        <p><strong style="color:var(--text)">${t.k}</strong> ${t.ktext}</p>
+        <p><strong style="color:var(--text)">${t.c}</strong> ${t.ctext}</p>
+      </div>
+    </div>
+    <div class="g-section">
+      <div class="g-label">${t.s3}</div>
+      <div class="read-order">
+        <a class="ro-item" href="free-origin.html">
+          <div class="ro-num">1</div>
+          <div class="ro-content"><div class="ro-title">${t.r1t}</div><div class="ro-desc">${t.r1d}</div></div>
+        </a>
+        <a class="ro-item" href="free-about.html">
+          <div class="ro-num">2</div>
+          <div class="ro-content"><div class="ro-title">${t.r2t}</div><div class="ro-desc">${t.r2d}</div></div>
+        </a>
+        <a class="ro-item" href="free-concept.html">
+          <div class="ro-num">3</div>
+          <div class="ro-content"><div class="ro-title">${t.r3t}</div><div class="ro-desc">${t.r3d}</div></div>
+        </a>
+        <a class="ro-item" href="cifra-free.html" style="border-color:var(--accent);background:rgba(65,105,225,.06);">
+          <div class="ro-num" style="color:var(--pink)">4</div>
+          <div class="ro-content">
+            <div class="ro-title" style="color:var(--accent)">${t.r4t}</div>
+            <div class="ro-desc">${t.r4d}</div>
+          </div>
+        </a>
+      </div>
+    </div>`;
+}
+
+// ── LANG (free) ─────────────────────────────────────────
+const CIFRA_LANGS_FREE = [
+  {id:'en-GB',label:'🇬🇧 EN'},{id:'fr',label:'🇫🇷 FR'},{id:'fr-BE',label:'🇧🇪 FR-BE'},
+  {id:'fr-CH',label:'🇨🇭 FR-CH'},{id:'fr-CA',label:'🇨🇦 QC'},{id:'de',label:'🇩🇪 DE'},
+  {id:'de-AT',label:'🇦🇹 DE-AT'},{id:'de-CH',label:'🇨🇭 DE-CH'},{id:'nl',label:'🇳🇱 NL'},
+  {id:'lb',label:'🇱🇺 LB'},{id:'it',label:'🇮🇹 IT'},{id:'it-CH',label:'🇨🇭 IT-CH'},
+  {id:'pt',label:'🇵🇹 PT'},{id:'es',label:'🇪🇸 ES'},{id:'is',label:'🇮🇸 IS'},
+  {id:'ca',label:'🏴 CA'},{id:'eu',label:'🏴 EU'},{id:'gl',label:'🏴 GL'},
+  {id:'oc',label:'🏴 OC'},{id:'br',label:'🏴 BR'},{id:'co',label:'🏴 CO'},{id:'rm',label:'🇨🇭 RM'},
+];
+function fGetLang(){try{return localStorage.getItem('cifra_lang')||'en-GB';}catch(e){return 'en-GB';}}
+function fSetLang(id){try{localStorage.setItem('cifra_lang',id);}catch(e){}}
+let fCurLang=fGetLang();
+
+function buildFLangbar(){
+  const bar=document.getElementById('fLangbar');
+  if(!bar)return;
+  bar.innerHTML='';
+  CIFRA_LANGS_FREE.forEach(l=>{
+    const btn=document.createElement('button');
+    btn.className='lang-btn'+(l.id===fCurLang?' active':'');
+    btn.textContent=l.label;
+    btn.title=l.id;
+    btn.addEventListener('click',()=>{fCurLang=l.id;fSetLang(l.id);buildFLangbar();renderGuide(fCurLang);});
+    bar.appendChild(btn);
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// GRAPH DATA
+// ═══════════════════════════════════════════════════════════
+const NODES = [
+  {id:'hw1974',  type:'paper',  label:'Hawking 1974', title:'Black hole explosions?',               source:'Nature 248 — Hawking, 1974',           desc:'Foundational paper proposing thermal radiation from black holes due to quantum effects near the event horizon.',           tags:['hawking','radiation'],          keywords:['hawking','black hole','explosion','1974','nature']},
+  {id:'hw1975',  type:'paper',  label:'Hawking 1975', title:'Particle Creation by Black Holes',      source:'Commun. Math. Phys. — Hawking, 1975',  desc:'Formal derivation of Hawking temperature. Each emitted particle carries partial information about the initial state.',     tags:['hawking','entropy'],            keywords:['hawking','particle','creation','temperature','1975']},
+  {id:'mit2023', type:'paper',  label:'MIT 2023',     title:'Information Dispersal in Distributed Crypto', source:'MIT CSAIL TR, 2023',           desc:'Framework connecting information-theoretic security with distributed ledger protocols via entropy bounds.',                 tags:['crypto','mit'],                 keywords:['mit','distributed','information','dispersal','2023']},
+  {id:'rabin89', type:'paper',  label:'Rabin 1989',   title:'Efficient Dispersal of Information',    source:'JACM 36 — Rabin, 1989',               desc:'Classical IDA: splits a message into n fragments where any k can reconstruct it. Foundation of dispersio.',                tags:['crypto','dispersal'],           keywords:['rabin','ida','fragments','reconstruct','1989']},
+  {id:'shamir79',type:'paper',  label:'Shamir 1979',  title:'How to Share a Secret',                 source:'CACM 22 — Shamir, 1979',              desc:'Secret sharing via polynomial interpolation over finite fields. Any k of n shares reconstruct the secret.',                tags:['crypto','threshold'],           keywords:['shamir','secret','share','polynomial','1979']},
+  {id:'hawkrad', type:'hawking',label:'Hawking Rad.', title:'Hawking Radiation',                     source:'QFT in curved spacetime',              desc:'Virtual pairs near the horizon: one falls in, one escapes. The black hole radiates and loses mass over time.',             tags:['hawking','radiation'],          keywords:['hawking','radiation','virtual','pair','horizon','emit']},
+  {id:'infoloss',type:'hawking',label:'Info. Loss',   title:'Information Loss Paradox',              source:'Hawking–Penrose 1976–2016',            desc:'If a black hole evaporates, is information destroyed? This violates unitarity — the central open problem of quantum gravity.', tags:['hawking','paradox'],            keywords:['information','loss','paradox','unitarity','evaporate']},
+  {id:'entropy', type:'hawking',label:'Entropy',      title:'Shannon / BH Entropy',                  source:'Shannon 1948 · Bekenstein 1973',       desc:'H = −Σ p log p. Measures uncertainty. The bridge between physics and cryptography. Maximum entropy equals maximum security.',  tags:['hawking','crypto'],             keywords:['entropy','shannon','bekenstein','information','uncertainty']},
+  {id:'entangle',type:'hawking',label:'Entanglement', title:'Quantum Entanglement',                  source:'EPR, Bell, Aspect',                    desc:'Pairs share quantum state across arbitrary distance. Possible mechanism by which information escapes the event horizon.',     tags:['hawking','quantum'],            keywords:['entangle','quantum','epr','bell','correlation']},
+  {id:'dispersio',type:'crypto',label:'dispersio',   title:'Information Dispersal Algorithm',        source:'cifra/dispersio core',                 desc:'M encoded into n fragments. Any k reconstruct M exactly. No k−1 fragments reveal anything. Information disperses, not vanishes.', tags:['crypto','core'],              keywords:['dispersio','fragments','encode','reconstruct','ida','split','n','k']},
+  {id:'threshold',type:'crypto',label:'Threshold',   title:'Threshold Cryptography',                 source:'Desmedt & Frankel, 1989',              desc:'Cryptographic operations require k of n parties. No single point of failure. Distributed trust by design.',                  tags:['crypto','distributed'],         keywords:['threshold','parties','distributed','trust','secret']},
+  {id:'ecc',     type:'crypto', label:'ECC',          title:'Elliptic Curve Cryptography',           source:'Miller 1985, Koblitz 1987',            desc:'Points on elliptic curves over finite fields. Discrete log is computationally hard. Standard in TLS and modern protocols.',   tags:['crypto','asymmetric'],          keywords:['ecc','elliptic','curve','discrete','log','tls','asymmetric']},
+  {id:'lattice', type:'crypto', label:'Lattice',      title:'Lattice-Based Cryptography',            source:'NIST PQC Round 3, 2022',               desc:'Post-quantum security based on hardness of shortest vector problem. Resistant to Shor algorithm. Future of public-key crypto.', tags:['crypto','post-quantum'],        keywords:['lattice','post-quantum','shor','nist','pqc','vector']},
+  {id:'cifra',   type:'bridge', label:'cifra',        title:'cifra — the cipher layer',              source:'This platform',                        desc:'The transformation layer. dispersio is the spread. Together: information does not vanish — it transforms and distributes.',     tags:['bridge','core'],                keywords:['cifra','cipher','transform','encrypt','key','encode']},
+  {id:'distance',type:'bridge', label:'Distance',     title:'Conceptual Distance',                   source:'Hawking (via this platform)',           desc:'The gap between a concept and its understanding. The space an algorithm must traverse. Distance is not absence — it is direction.', tags:['bridge','philosophy'],         keywords:['distance','gap','direction','concept','traverse']},
+];
+
+const LINKS = [
+  {source:'hw1974',  target:'hawkrad',  label:'derives'},
+  {source:'hw1975',  target:'entropy',  label:'entropy bound'},
+  {source:'rabin89', target:'dispersio',label:'founds'},
+  {source:'shamir79',target:'threshold',label:'founds'},
+  {source:'mit2023', target:'dispersio',label:'extends'},
+  {source:'hawkrad', target:'infoloss', label:'raises'},
+  {source:'infoloss',target:'entangle', label:'resolved by?'},
+  {source:'infoloss',target:'distance', label:'motivates'},
+  {source:'hawkrad', target:'entropy',  label:'thermal'},
+  {source:'entropy', target:'dispersio',label:'bounds'},
+  {source:'dispersio',target:'threshold',label:'requires'},
+  {source:'threshold',target:'ecc',    label:'uses'},
+  {source:'ecc',     target:'lattice', label:'precedes'},
+  {source:'cifra',   target:'dispersio',label:'encodes via'},
+  {source:'distance',target:'cifra',   label:'traversed by'},
+  {source:'entangle',target:'threshold',label:'analogy'},
+  {source:'hw1974',  target:'cifra',   label:'inspires'},
+];
+
+const COLOR={hawking:'#e16941',crypto:'#41e1a8',paper:'#a841e1',bridge:'#4169e1'};
+
+// ═══════════════════════════════════════════════════════════
+// STATIC DISPERSAL GRAPH (free tier)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  const canvas = document.getElementById('bhCanvas');
+  const ctx = canvas.getContext('2d');
+  const PINK = '#e14169', BLUE = '#6190ff';
+  const DIM_B = 'rgba(97,144,255,0.22)', DIM_P = 'rgba(225,65,105,0.16)';
+  let W, H, cx, cy, nodeData = [];
+
+  function build() {
+    nodeData = [];
+    cx = W / 2; cy = H / 2;
+    const clusters = [
+      { angle: -0.5,  dist: W*0.20, hubR: 6,  leafN: 24, leafR: W*0.09, color: PINK, lc: BLUE,  dc: DIM_B },
+      { angle:  0.65, dist: W*0.20, hubR: 8,  leafN: 28, leafR: W*0.10, color: PINK, lc: BLUE,  dc: DIM_B },
+      { angle:  1.75, dist: W*0.19, hubR: 5,  leafN: 20, leafR: W*0.08, color: BLUE, lc: PINK,  dc: DIM_P },
+      { angle:  2.75, dist: W*0.20, hubR: 7,  leafN: 26, leafR: W*0.09, color: PINK, lc: BLUE,  dc: DIM_B },
+      { angle: -2.1,  dist: W*0.18, hubR: 5,  leafN: 22, leafR: W*0.08, color: BLUE, lc: PINK,  dc: DIM_P },
+      { angle:  3.85, dist: W*0.13, hubR: 4,  leafN: 16, leafR: W*0.07, color: BLUE, lc: PINK,  dc: DIM_P },
+    ];
+    clusters.forEach((def, ci) => {
+      const hx = cx + Math.cos(def.angle) * def.dist;
+      const hy = cy + Math.sin(def.angle) * def.dist;
+      const hub = { x: hx, y: hy, r: def.hubR, color: def.color, isHub: true, leaves: [], def };
+      nodeData.push(hub);
+      for (let i = 0; i < def.leafN; i++) {
+        const a = (i / def.leafN) * Math.PI * 2 + ci * 0.37;
+        const d = def.leafR * (0.5 + Math.random() * 0.5);
+        hub.leaves.push({ x: hx + Math.cos(a)*d, y: hy + Math.sin(a)*d,
+          r: 1.5 + Math.random()*2, color: def.lc, dim: def.dc, isHub: false });
+      }
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    // core glow
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, W*0.16);
+    g.addColorStop(0, 'rgba(65,105,225,0.14)'); g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, W*0.16, 0, Math.PI*2); ctx.fill();
+    // black hole
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.042, 0, Math.PI*2);
+    ctx.fillStyle = '#060810'; ctx.fill();
+    ctx.strokeStyle = 'rgba(65,105,225,0.45)'; ctx.lineWidth = 0.8; ctx.stroke();
+    // event horizon dashed
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.054, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(65,105,225,0.18)'; ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 5]); ctx.stroke(); ctx.setLineDash([]);
+    // hubs
+    const hubs = nodeData.filter(n => n.isHub);
+    // center→hub edges
+    hubs.forEach(hub => {
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hub.x, hub.y);
+      ctx.strokeStyle = hub.color === PINK ? 'rgba(225,65,105,0.5)' : 'rgba(97,144,255,0.4)';
+      ctx.lineWidth = 0.9; ctx.stroke();
+    });
+    // hub→leaf edges + leaves
+    hubs.forEach(hub => {
+      hub.leaves.forEach(leaf => {
+        ctx.beginPath(); ctx.moveTo(hub.x, hub.y); ctx.lineTo(leaf.x, leaf.y);
+        ctx.strokeStyle = leaf.dim; ctx.lineWidth = 0.4; ctx.stroke();
+        ctx.beginPath(); ctx.arc(leaf.x, leaf.y, leaf.r, 0, Math.PI*2);
+        ctx.fillStyle = leaf.color === PINK ? 'rgba(225,65,105,0.55)' : 'rgba(97,144,255,0.5)';
+        ctx.fill();
+      });
+    });
+    // hub nodes
+    hubs.forEach(hub => {
+      const hg = ctx.createRadialGradient(hub.x, hub.y, 0, hub.x, hub.y, hub.r*3.5);
+      hg.addColorStop(0, hub.color === PINK ? 'rgba(225,65,105,0.28)' : 'rgba(97,144,255,0.22)');
+      hg.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r*3.5, 0, Math.PI*2);
+      ctx.fillStyle = hg; ctx.fill();
+      ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, 0, Math.PI*2);
+      ctx.fillStyle = hub.color; ctx.fill();
+    });
+    // label
+    ctx.fillStyle = 'rgba(65,105,225,0.6)';
+    ctx.font = `${Math.max(8, W*0.018)}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('dispersio', cx, cy + W*0.042 + 13);
+  }
+
+  function resize() {
+    const parent = canvas.parentElement;
+    W = parent.clientWidth; H = parent.clientHeight;
+    canvas.width  = W * devicePixelRatio;
+    canvas.height = H * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    build(); render();
+  }
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 100);
+  setTimeout(resize, 400); // mobile fallback
+})();
+
+// ── init ──
+document.addEventListener('DOMContentLoaded', function() {
+  buildFLangbar();
+  renderGuide(fCurLang);
+});
+// fallback if DOMContentLoaded already fired
+if(document.readyState !== 'loading') {
+  buildFLangbar();
+  renderGuide(fCurLang);
+}
+</script>
+</body>
+</html>
